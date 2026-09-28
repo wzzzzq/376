@@ -1,0 +1,62 @@
+% Stand-in for the course-provided header.tex (EECS 376).
+% It defines the macros used by hw4.tex so the file compiles on its own.
+% If you have the official header.tex, just drop it in this folder instead.
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{enumerate}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+
+% Print "Input:" / "Output:" instead of "Require:" / "Ensure:"
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+% notation macros used in the problem statements
+\newcommand{\set}[1]{\left\{#1\right\}}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\OPT}{\mathrm{OPT}}
+\newcommand{\ALG}{\mathrm{ALG}}
+\newcommand{\algo}[1]{\textsc{#1}}
+\newcommand{\hint}[1]{\emph{Hint:} #1}
+\newcommand{\jrnote}[1]{}
+\newcommand{\fxnote}[1]{}
+
+% page headers (exam class)
+\pagestyle{headandfoot}
+\newcommand{\hwheader}{%
+  \firstpageheader{EECS 376: Foundations of Computer Science}{}{Homework \hwnum}
+  \runningheader{EECS 376: Foundations of Computer Science}{}{Homework \hwnum}
+  \firstpagefooter{}{\thepage}{}
+  \runningfooter{}{\thepage}{}
+}
+\newcommand{\hwslnheader}{%
+  \firstpageheader{EECS 376: Foundations of Computer Science\\University of Michigan, Fall 2026}{}{Solutions to Homework \hwnum}
+  \runningheader{EECS 376: Foundations of Computer Science\\University of Michigan, Fall 2026}{}{Solutions to Homework \hwnum}
+  \firstpagefooter{}{\thepage}{}
+  \runningfooter{}{\thepage}{}
+}
+\newcommand{\hwpreface}{%
+  \noindent This homework has \numquestions{} questions, for a total of \numpoints{} points and \numbonuspoints{} extra-credit points.
+  \smallskip
+
+  \noindent Unless otherwise stated, each question requires clear, logically correct, and sufficient justification to convince the reader.
+  \smallskip
+
+  \noindent We strongly encourage you to typeset your solutions in \LaTeX.
+  \smallskip
+
+  \noindent If you collaborated with someone, you must state their name(s). You must write your own solution for all problems and may not use any other student's write-up or any AI tools.
+  \bigskip
+}
+
+% solution boxes look like the posted solutions
+\renewcommand{\solutiontitle}{\noindent\textbf{Solution:}\enspace}
+\unframedsolutions
+\pointsinrightmargin
+\bracketedpoints
+\marginbonuspointname{}
+\bonuspointpoints{EC}{EC}
