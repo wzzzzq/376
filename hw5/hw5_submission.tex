@@ -5,6 +5,7 @@
 \usepackage{algpseudocode}
 \usepackage{tikz}
 \usetikzlibrary{automata,positioning,arrows.meta}
+\usepackage{graphicx}
 \usepackage{fancyhdr}
 \usepackage{enumerate}
 \usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
@@ -318,21 +319,11 @@ table:
 \end{verbatim}
 \end{quote}
 
-The resulting machine, drawn as a state diagram (labels are \emph{read} $\to$ \emph{write}, \emph{move}; a missing write means the symbol is left alone):
+Here is the resulting machine on turingmachine.io, after running it on the input \texttt{1011}; the tape now reads \texttt{1101}.
 
 \begin{center}
-\begin{tikzpicture}[node distance=3.4cm,auto]
-  \node[state,initial]            (right) {right};
-  \node[state,right=of right]     (skip)  {skip};
-  \node[state,right=of skip]      (carry) {carry};
-  \node[state,accepting,right=of carry] (done) {done};
-  \path[->]
-    (right) edge[loop above] node {$0,1 \to \mathrm{R}$} (right)
-    (right) edge node {$\sqcup \to \mathrm{L}$} (skip)
-    (skip)  edge node {$0,1 \to \mathrm{L}$} (carry)
-    (carry) edge[loop above] node {$1 \to 0, \mathrm{L}$} (carry)
-    (carry) edge node {$0,\sqcup \to 1, \mathrm{L}$} (done);
-\end{tikzpicture}
+\includegraphics[width=0.7\linewidth]{add2.png}\\[1em]
+\includegraphics[width=0.95\linewidth]{add2_tape.png}
 \end{center}
 
 For example, on input \texttt{1011} (eleven) the machine scans right to the blank, steps left onto the final \texttt{1}, steps left again onto \texttt{1} in state \texttt{carry}, writes \texttt{0} and moves left, reads \texttt{0}, writes \texttt{1} and stops in \texttt{done}.
