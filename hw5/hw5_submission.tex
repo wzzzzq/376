@@ -441,9 +441,9 @@ So \algo{DecideL} halts on every input.
 \textbf{It is correct.}
 Unfold the definition: $x \in L$ if and only if $x \in L_3$, or ($x \in L_1$ and $x \notin L_2$).
 \begin{itemize}
-  \item If $x \in L$ and $x \in L_3$, then $D_3(x)$ accepts, so the algorithm accepts on line 2.
-  \item If $x \in L$ and $x \notin L_3$, then $x \in L_1$ and $x \notin L_2$, so $D_1(x)$ accepts and $D_2(x)$ rejects, and the algorithm accepts on line 5.
-  \item If $x \notin L$, then $x \notin L_3$, so line 2 does not fire, and it is not the case that ($x \in L_1$ and $x \notin L_2$), so line 5 does not fire either. The algorithm rejects on line 7.
+  \item If $x \in L$ and $x \in L_3$, then $D_3(x)$ accepts, so the algorithm accepts at the first \textbf{if}.
+  \item If $x \in L$ and $x \notin L_3$, then $x \in L_1$ and $x \notin L_2$, so $D_1(x)$ accepts and $D_2(x)$ rejects, and the algorithm accepts at the second \textbf{if}.
+  \item If $x \notin L$, then $x \notin L_3$, so the first \textbf{if} does not fire, and it is not the case that ($x \in L_1$ and $x \notin L_2$), so the second \textbf{if} does not fire either. The algorithm reaches the last line and rejects.
 \end{itemize}
 So \algo{DecideL} accepts exactly the strings in $L$, and $L$ is decidable.
 
