@@ -1,6 +1,5 @@
 Paper:    Matsuki, Murai, Kelly and Davison, Gaussian Splatting SLAM, CVPR 2024
-Reader:   [Your Name] (minqianw)
-Seminar:  I / II / III / IV
+Reader:   Ziqian Wang (minqianw)
 Discussed with:  nobody
 
 ## 1. The claim
