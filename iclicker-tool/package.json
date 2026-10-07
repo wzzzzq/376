@@ -1,0 +1,14 @@
+{
+  "name": "iclicker-tool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Auto-login to iClicker student portal and fetch course data via its API",
+  "type": "commonjs",
+  "scripts": {
+    "login": "node login.js",
+    "fetch": "node fetch.js"
+  },
+  "dependencies": {
+    "playwright-core": "1.56.0"
+  }
+}
