@@ -3,7 +3,6 @@
 \usepackage{amsmath,amssymb}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-\usepackage{graphicx}
 \usepackage{fancyhdr}
 \usepackage{enumerate}
 \usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
@@ -16,7 +15,7 @@
 \lhead{EECS 376: Foundations of Computer Science\\University of Michigan, Fall 2026}
 \rhead{\vspace{\baselineskip}Solutions to Homework \hwnum}
 \cfoot{\thepage}
-\setlength{\headheight}{32pt}
+\setlength{\headheight}{28pt}
 
 % pseudocode labels
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
@@ -28,18 +27,17 @@
 \newcommand{\inner}[1]{\langle #1 \rangle}
 \newcommand{\algo}[1]{\textsc{#1}}
 \newcommand{\lT}{\leq_T}
-\newcommand{\bit}{\set{0,1}}
-\newcommand{\Lh}{\ensuremath{L_{\text{HALT}}}}
-\newcommand{\Lacc}{\ensuremath{L_{\text{ACC}}}}
-\newcommand{\Lb}{\ensuremath{L_{\text{BARBER}}}}
-\newcommand{\Lsl}{\ensuremath{L_{\text{SELF-LOOP}}}}
-\newcommand{\Lal}{\ensuremath{L_{\text{AND-LOOP}}}}
-\newcommand{\Lph}{\ensuremath{L_{\text{PREFIX-HALT}}}}
-\newcommand{\Lsmh}{\ensuremath{L_{\text{SmallHalt}}}}
-\newcommand{\Msearch}{\ensuremath{M_{\textsc{Search}}}}
-\newcommand{\pow}[1]{\mathcal{P}(#1)}
-\newcommand{\acc}{\text{accept}}
-\newcommand{\rej}{\text{reject}}
+\newcommand{\Lh}{L_{\text{HALT}}}
+\newcommand{\Lacc}{L_{\text{ACC}}}
+\newcommand{\Lb}{L_{\text{BARBER}}}
+\newcommand{\Lsl}{L_{\text{SELF-LOOP}}}
+\newcommand{\Lal}{L_{\text{AND-LOOP}}}
+\newcommand{\Lph}{L_{\text{PREFIX-HALT}}}
+\newcommand{\Lloop}{L_{\text{LOOP}}}
+\newcommand{\Lsmh}{L_{\text{SmallHalt}}}
+\newcommand{\Ms}{M_{\textsc{Search}}}
+\newcommand{\Mb}{M_{\overline{\text{BARBER}}}}
+\newcommand{\PS}{\mathcal{P}}
 
 % one part per page for Gradescope
 \newcommand{\qpage}[1]{\clearpage\noindent\textbf{\large #1}\par\medskip}
@@ -48,7 +46,7 @@
 
 \noindent\textbf{\large Q0 Before you start; before you submit}\par\medskip
 
-I read Handout 5 on Turing reductions before starting, and every reduction below follows it: I name the oracle, give pseudocode for the machine that uses it, show that the machine always halts, and prove correctness in both directions.
+I read Handout 5 on Turing reductions before starting, and the reductions below follow it: name the oracle, give pseudocode for the machine that uses it, show that the machine always halts, and prove correctness in both directions.
 I did not use Rice's Theorem anywhere.
 I did not collaborate with anyone on this homework.
 
@@ -80,26 +78,34 @@ table:
 \end{quote}
 
 What was deficient: the machine is wrong on the empty input, which represents the number zero.
-On a blank tape, state \texttt{right} immediately reads a blank and moves left into \texttt{skip}; but \texttt{skip} only has rules for \texttt{1} and \texttt{0}, so the machine gets stuck on a blank with no matching transition.
-The tape is still empty, i.e., the output is $0$ instead of $0 + 2 = 2 = \texttt{10}_2$.
-I only tested on inputs like \texttt{1011} and \texttt{1}, where the least significant bit exists, and I never asked what happens when there is no bit to step over.
-The posted solution explicitly handles this case with an extra \texttt{empty} state, and the rubric gives $4$ of the $7$ points for a \emph{fully} correct machine, so this edge case matters.
+On a blank tape, state \texttt{right} immediately reads a blank and moves left into \texttt{skip}.
+But \texttt{skip} only has rules for \texttt{1} and \texttt{0}, so the machine gets stuck on a blank with no matching transition.
+The tape is still empty, so the output is $0$ instead of $0 + 2 = 2 = \texttt{10}_2$.
+I only tested on inputs like \texttt{1011} and \texttt{1}, where there is a least significant bit to step over, and never asked what happens when there is no bit at all.
+The posted solution handles this case with a separate \texttt{empty} state, and the rubric gives $4$ of the $7$ points for a fully correct machine, so this edge case matters.
 
-How to fix it: when the scan hits a blank right away, there is no least significant bit, so the machine should write the $0$ of the answer \texttt{10} itself and then let the carry logic write the leading $1$.
-Concretely, add a transition \texttt{' ': \{R: empty\}} to the start state (so it is taken only when the very first cell is blank; after moving right onto a blank there are no digits anywhere), and a state
+How to fix it: the first cell has to be inspected before the scan starts, because that is the only moment the machine can tell an empty tape from the end of a nonempty one.
+So I would add a new start state that looks at the first cell: on a digit it moves right into the usual scan, and on a blank it goes to a state that writes the \texttt{0} of the answer \texttt{10} and lets the carry logic write the leading \texttt{1}.
+In turingmachine.io syntax:
 \begin{quote}\small
 \begin{verbatim}
+start state: start
+  start:
+    [1,0]: {R: right}
+    ' '  : {R: empty}
   empty:
     [1,0,' ']: {write: 0, L: carry}
 \end{verbatim}
 \end{quote}
-Then on the empty input the machine writes \texttt{0}, moves left onto a blank in \texttt{carry}, and writes \texttt{1}, leaving \texttt{10} on the tape, which is correct.
-On every nonempty input the first symbol is a digit, so the new transition is never used and the machine behaves exactly as before.
-The lesson is to check the smallest input (here, the empty string) before declaring a machine finished, since the degenerate case usually needs its own transitions.
+with \texttt{right}, \texttt{skip}, \texttt{carry}, \texttt{done} unchanged.
+On the empty input the machine goes \texttt{start} $\to$ \texttt{empty}, writes \texttt{0}, moves left onto a blank in \texttt{carry}, writes \texttt{1}, and stops with \texttt{10} on the tape, which is correct.
+On every nonempty input the first symbol is a digit, so the new state just hands off to \texttt{right} and the machine behaves exactly as before.
+(My first instinct was to add a blank rule to \texttt{right} itself, but \texttt{right} already uses the blank to detect the end of the scan, so a separate state is needed.)
+The lesson is to check the smallest input, here the empty string, before calling a machine finished.
 
 \qpage{Q2.1 Turing reduction warmup (a)}
 
-\textbf{The statement is true:} $L \lT \overline{L}$ for every language $L$.
+The statement is true: $L \lT \overline{L}$ for every language $L$.
 
 Let $O$ be an oracle that decides $\overline{L}$, i.e., $O$ halts on every input and $O(x)$ accepts if and only if $x \in \overline{L}$.
 Consider the following machine with access to $O$.
@@ -125,11 +131,13 @@ By the definition of the complement, the fact that $O$ decides $\overline{L}$, a
 \end{align*}
 So $M_L$ decides $L$ using an oracle for $\overline{L}$, which is exactly the definition of $L \lT \overline{L}$.
 Since $L$ was arbitrary, every language is Turing-reducible to its complement.
-(Note that this says nothing about whether $L$ is decidable: the oracle is a hypothetical device, and all we have shown is that deciding $L$ is no harder than deciding $\overline{L}$.)
+
+(This says nothing about whether $L$ is decidable.
+The oracle is a hypothetical device, and all we have shown is that deciding $L$ is no harder than deciding $\overline{L}$.)
 
 \qpage{Q2.2 Turing reduction warmup (b)}
 
-\textbf{The statement is true:} if $L$ is decidable, then $L \lT L'$ for every language $L'$.
+The statement is true: if $L$ is decidable, then $L \lT L'$ for every language $L'$.
 
 Since $L$ is decidable, there is a Turing machine $D$ that halts on every input and accepts exactly the strings in $L$.
 Let $O$ be an oracle that decides $L'$.
@@ -148,19 +156,18 @@ Its only step is to run $D$, which halts on every input because $D$ is a decider
 
 \textbf{Correctness.}
 Because $D$ decides $L$,
-\[
-  x \in L \Longrightarrow D(x) \text{ accepts} \Longrightarrow M_L(x) \text{ accepts},
-  \qquad
-  x \notin L \Longrightarrow D(x) \text{ rejects} \Longrightarrow M_L(x) \text{ rejects}.
-\]
+\begin{align*}
+  x \in L &\Longrightarrow D(x) \text{ accepts} \Longrightarrow M_L(x) \text{ accepts}, \\
+  x \notin L &\Longrightarrow D(x) \text{ rejects} \Longrightarrow M_L(x) \text{ rejects}.
+\end{align*}
 So $M_L$ decides $L$.
 A Turing reduction is a Turing machine that decides $L$ when given access to an oracle for $L'$, and it may call the oracle any finite number of times, including zero times.
 Hence $M_L$ is a valid Turing reduction and $L \lT L'$.
-Since $L'$ was arbitrary, a decidable language is Turing-reducible to every language (in particular to $\emptyset$, to $\Sigma^*$, and to undecidable languages like $\Lh$).
+Since $L'$ was arbitrary, a decidable language is Turing-reducible to every language, in particular to $\emptyset$, to $\Sigma^*$, and to undecidable languages like $\Lh$.
 
 \qpage{Q2.3 Turing reduction warmup (c)}
 
-\textbf{The statement is false.}
+The statement is false.
 Here is a counterexample: $L = L' = \Lh$.
 
 \textbf{$\Lh \lT \Lh$.}
@@ -186,7 +193,7 @@ This was proved in lecture.
 So with $L = L' = \Lh$ there exists a language $L'$ with $L \lT L'$, yet $L$ is undecidable.
 This disproves the statement.
 
-The reason the statement fails: $L \lT L'$ only says that $L$ is \emph{no harder} than $L'$.
+The reason the statement fails: $L \lT L'$ only says that $L$ is no harder than $L'$.
 That lets decidability flow from $L'$ to $L$ (if $L'$ is decidable, so is $L$), and undecidability flow from $L$ to $L'$ (if $L$ is undecidable, so is $L'$), but it gives no information about $L$ when $L'$ is undecidable.
 (Part (a) gives another counterexample: $\Lh \lT \overline{\Lh}$ with $\Lh$ undecidable.)
 
@@ -194,20 +201,20 @@ That lets decidability flow from $L'$ to $L$ (if $L'$ is decidable, so is $L$), 
 
 The machine checks the even numbers $4, 6, 8, \ldots$ in increasing order.
 For each one it tries every way of writing it as a sum of two numbers and asks whether both are prime.
-If it ever finds an even number that is \emph{not} a sum of two primes, it halts; otherwise it moves on to the next even number forever.
+If it ever finds an even number that is not a sum of two primes, it halts; otherwise it moves on to the next even number, forever.
 
 \begin{algorithmic}[1]
   \Require{Any string $w$ (ignored)}
-  \Function{$\Msearch$}{$w$}
+  \Function{$\Ms$}{$w$}
     \State $n \gets 4$
     \Loop
-      \State $\textit{found} \gets \text{false}$
+      \State $\mathit{found} \gets \text{false}$
       \For{$p = 2, 3, \ldots, n-2$}
-        \If{$\algo{isPrime}(p)$ \textbf{and} $\algo{isPrime}(n-p)$}
-          \State $\textit{found} \gets \text{true}$
+        \If{$\algo{isPrime}(p)$ and $\algo{isPrime}(n-p)$}
+          \State $\mathit{found} \gets \text{true}$
         \EndIf
       \EndFor
-      \If{\textbf{not} \textit{found}} \Return accept \Comment{$n$ is a counterexample: halt}
+      \If{not $\mathit{found}$} \Return accept \Comment{$n$ is a counterexample: halt}
       \EndIf
       \State $n \gets n + 2$
     \EndLoop
@@ -216,119 +223,121 @@ If it ever finds an even number that is \emph{not} a sum of two primes, it halts
 
 \textbf{Each pass of the outer loop halts.}
 For a fixed $n$, the inner \textbf{for} loop runs $n-3$ times, and each iteration makes two calls to $\algo{isPrime}$, which always returns.
-So every pass through the outer loop takes a finite number of steps, and the only way for $\Msearch$ not to halt is to go through infinitely many passes.
+So every pass through the outer loop takes a finite number of steps, and the only way for $\Ms$ not to halt is to go through infinitely many passes.
 
 \textbf{Each pass tests the right thing.}
 Fix an even $n \ge 4$.
-If $n = p + q$ for primes $p, q$, then $2 \le p \le n-2$ (since $q \ge 2$), so the inner loop reaches $i = p$, sees that $p$ and $n - p = q$ are both prime, and sets $\textit{found}$ to true.
-Conversely, if $\textit{found}$ is set to true at some $p$, then $p$ and $n-p$ are primes with $p + (n-p) = n$.
-So after the inner loop, $\textit{found}$ is true if and only if $n$ is a sum of two primes.
+If $n = p + q$ for primes $p, q$, then $2 \le p \le n-2$ (since $q \ge 2$), so the inner loop reaches this value of $p$, sees that $p$ and $n - p = q$ are both prime, and sets $\mathit{found}$ to true.
+Conversely, if $\mathit{found}$ is set to true at some $p$, then $p$ and $n-p$ are primes with $p + (n-p) = n$.
+So after the inner loop, $\mathit{found}$ is true if and only if $n$ is a sum of two primes.
 
-\textbf{$\Msearch$ halts if and only if the Goldbach Conjecture is false.}
+\textbf{$\Ms$ halts if and only if the Goldbach Conjecture is false.}
 \begin{itemize}
   \item Suppose the conjecture is false.
   Then some even $n > 2$ is not a sum of two primes; let $n^*$ be the smallest such.
-  For every even $n$ with $4 \le n < n^*$, the pass for $n$ sets $\textit{found}$ to true and does not halt, so the machine goes on to $n + 2$.
-  After finitely many passes it reaches $n = n^*$, where $\textit{found}$ stays false, and it halts.
+  For every even $n$ with $4 \le n < n^*$, the pass for $n$ sets $\mathit{found}$ to true and does not halt, so the machine goes on to $n+2$.
+  After finitely many passes it reaches $n = n^*$, where $\mathit{found}$ stays false, and it halts.
   \item Suppose the conjecture is true.
-  Then every even $n \ge 4$ is a sum of two primes, so every pass sets $\textit{found}$ to true and the \textbf{return} is never executed.
-  The outer loop runs forever, so $\Msearch$ does not halt.
+  Then every even $n \ge 4$ is a sum of two primes, so every pass sets $\mathit{found}$ to true and the \textbf{return} is never executed.
+  The outer loop runs forever, so $\Ms$ does not halt.
 \end{itemize}
 The input $w$ is never read, so this behavior is the same on every input.
 
 \qpage{Q3.2 Goldbach conjecture (b)}
 
 Let $H$ be an oracle that decides $\Lh$: $H$ halts on every input and $H(\inner{M}, x)$ accepts if and only if $M(x)$ halts.
-By part (a), $\Msearch$ halts (on any input, say the empty string $\varepsilon$) exactly when the Goldbach Conjecture is false.
-So asking $H$ whether $\Msearch$ halts on $\varepsilon$ is the same as asking whether the conjecture is false.
+By part (a), $\Ms$ halts (on any input, say the empty string $\varepsilon$) exactly when the Goldbach Conjecture is false.
+So asking $H$ whether $\Ms$ halts on $\varepsilon$ is the same as asking whether the conjecture is false.
 
 \begin{algorithmic}[1]
   \Require{Any string $w$ (ignored)}
   \Ensure{accept if the Goldbach Conjecture is true, reject otherwise}
   \Function{$M_G$}{$w$}
-    \If{$H(\inner{\Msearch}, \varepsilon)$ accepts} \Return reject
+    \If{$H(\inner{\Ms}, \varepsilon)$ accepts} \Return reject
     \Else{} \Return accept
     \EndIf
   \EndFunction
 \end{algorithmic}
 
-The string $\inner{\Msearch}$ is a fixed, finite piece of code (the pseudocode from part (a)), so it can be written directly into $M_G$.
+The string $\inner{\Ms}$ is a fixed, finite piece of code (the pseudocode from part (a)), so it can be written directly into $M_G$.
 
 \textbf{$M_G$ always halts.}
 It makes one call to $H$, which halts on every input because $H$ decides $\Lh$, and then returns.
-In particular $M_G$ never runs $\Msearch$ itself.
+In particular $M_G$ never runs $\Ms$ itself.
 
 \textbf{Correctness.}
 By part (a), the definition of $\Lh$, the fact that $H$ decides $\Lh$, and the code of $M_G$,
 \begin{align*}
-  \text{Goldbach true}
-  &\Longrightarrow \Msearch(\varepsilon) \text{ does not halt} \\
-  &\Longrightarrow (\inner{\Msearch}, \varepsilon) \notin \Lh \\
-  &\Longrightarrow H(\inner{\Msearch}, \varepsilon) \text{ rejects} \\
-  &\Longrightarrow M_G(w) \text{ accepts}, \\
-  \text{Goldbach false}
-  &\Longrightarrow \Msearch(\varepsilon) \text{ halts} \\
-  &\Longrightarrow (\inner{\Msearch}, \varepsilon) \in \Lh \\
-  &\Longrightarrow H(\inner{\Msearch}, \varepsilon) \text{ accepts} \\
+  \text{Goldbach true} &\Longrightarrow \Ms(\varepsilon) \text{ does not halt} \\
+  &\Longrightarrow (\inner{\Ms}, \varepsilon) \notin \Lh \\
+  &\Longrightarrow H(\inner{\Ms}, \varepsilon) \text{ rejects} \\
+  &\Longrightarrow M_G(w) \text{ accepts}, \\[0.5em]
+  \text{Goldbach false} &\Longrightarrow \Ms(\varepsilon) \text{ halts} \\
+  &\Longrightarrow (\inner{\Ms}, \varepsilon) \in \Lh \\
+  &\Longrightarrow H(\inner{\Ms}, \varepsilon) \text{ accepts} \\
   &\Longrightarrow M_G(w) \text{ rejects}.
 \end{align*}
 So on every input, $M_G$ accepts if the Goldbach Conjecture is true and rejects otherwise.
 
 \qpage{Q3.3 Goldbach conjecture (c)}
 
-Replacing $H$ by $M_{SH}$ gives an ordinary Turing machine $M_G'$ (no oracle) that makes one call $M_{SH}(\inner{\Msearch}, \varepsilon)$ and returns the opposite answer.
+Replacing $H$ by $M_{SH}$ gives an ordinary Turing machine $M_G'$ (no oracle) that makes one call $M_{SH}(\inner{\Ms}, \varepsilon)$ and returns the opposite answer.
 Whether this ``works'' depends on the length of that query.
 
-\textbf{If $(\inner{\Msearch}, \varepsilon)$ has $1000$ or more characters,} it is not in $\Lsmh$ by definition, whatever $\Msearch$ does.
+\textbf{If $(\inner{\Ms}, \varepsilon)$ has $1000$ or more characters}, it is not in $\Lsmh$ by definition, whatever $\Ms$ does.
 So $M_{SH}$ rejects it and $M_G'$ always accepts, regardless of whether the conjecture is true.
-In this case the solution does not work: $M_G'$'s answer is not based on the behavior of $\Msearch$ at all.
-(The correctness chain from part (b) breaks at the step ``$(\inner{\Msearch},\varepsilon) \in \Lh \Longrightarrow$ oracle accepts,'' which is no longer justified.)
+In this case the solution does not work: $M_G'$'s answer is not based on the behavior of $\Ms$ at all.
+(The correctness chain from part (b) breaks at the step ``$(\inner{\Ms}, \varepsilon) \in \Lh \Longrightarrow$ oracle accepts,'' which is no longer justified.)
 
-\textbf{If $(\inner{\Msearch}, \varepsilon)$ has fewer than $1000$ characters,} then $M_{SH}$ agrees with $H$ on this particular query, so the proof from part (b) goes through word for word, and $M_G'$ is a Turing machine with no oracle that accepts on every input if the conjecture is true and rejects on every input otherwise.
+\textbf{If $(\inner{\Ms}, \varepsilon)$ has fewer than $1000$ characters}, then $M_{SH}$ agrees with $H$ on this particular query, so the proof from part (b) goes through word for word, and $M_G'$ is a Turing machine with no oracle that accepts on every input if the conjecture is true and rejects on every input otherwise.
+
 This sounds exciting, but it does not help us learn the answer.
-The reason is that the proof that $\Lsmh$ is decidable is \emph{non-constructive}: $\Lsmh$ is finite, so it is decided by a machine that hard-codes the finite list of its members (as in HW5, Q6(a)), but we are not told \emph{which} strings are on that list.
-Writing down $M_{SH}$ would require knowing, for each of the finitely many pairs of length $< 1000$, whether $M$ halts on $x$, and for the pair $(\inner{\Msearch}, \varepsilon)$ that is precisely the question of whether the Goldbach Conjecture is true.
+The reason is that the proof that $\Lsmh$ is decidable is non-constructive.
+$\Lsmh$ is finite, so it is decided by a machine that hard-codes the finite list of its members (as in HW5, Q6(a)), but we are not told which strings are on that list.
+Writing down $M_{SH}$ would require knowing, for each of the finitely many pairs of length $< 1000$, whether $M$ halts on $x$, and for the pair $(\inner{\Ms}, \varepsilon)$ that is exactly the question of whether the Goldbach Conjecture is true.
 So $M_{SH}$ exists, but nobody can actually write it down and run it without already having resolved the conjecture.
 
-In fact, the \emph{existence} of a Turing machine that answers the Goldbach question was never in doubt: one of the two trivial machines ``always accept'' and ``always reject'' is correct, we just do not know which.
-Part (b) is interesting only because the oracle $H$ is a single machine that would answer this and countless other open questions at once, and part (c) shows that the finite restriction $\Lsmh$ gives us nothing of the sort.
+In fact, the existence of a Turing machine that answers the Goldbach question was never in doubt: one of the two trivial machines ``always accept'' and ``always reject'' is correct, we just do not know which.
+Part (b) is interesting only because the oracle $H$ is a single machine that would answer this and countless other open questions at once, and part (c) shows that the finite restriction $\Lsmh$ does not give us anything like that.
 
 \qpage{Q4.1 Professor $\Upsilon$'s reductions (a)}
 
 \textbf{The error: the reduction goes in the wrong direction, so there is no contradiction.}
 
-The argument constructs $M_{\overline{\text{BARBER}}}$ that decides $\overline{\Lb}$ given a decider $D_{\text{ACC}}$ for $\Lacc$.
-That is a proof of $\overline{\Lb} \lT \Lacc$: \emph{if} $\Lacc$ were decidable, then $\overline{\Lb}$ would be too.
-But $\Lacc$ is undecidable, so the machine $D_{\text{ACC}}$ does not exist, the ``decider'' $M_{\overline{\text{BARBER}}}$ was never actually built, and no contradiction arises.
-The last sentence of the proof treats ``$\overline{\Lb}$ is decidable \emph{relative to} $\Lacc$'' as if it were ``$\overline{\Lb}$ is decidable,'' which is not what was shown.
+The argument constructs $\Mb$ that decides $\overline{\Lb}$ given a decider $D_{\text{ACC}}$ for $\Lacc$.
+That is a proof of $\overline{\Lb} \lT \Lacc$: if $\Lacc$ were decidable, then $\overline{\Lb}$ would be too.
+But $\Lacc$ is undecidable, so the machine $D_{\text{ACC}}$ does not exist, the ``decider'' $\Mb$ was never actually built, and no contradiction arises.
+The last sentence of the proof treats ``$\overline{\Lb}$ is decidable relative to $\Lacc$'' as if it were ``$\overline{\Lb}$ is decidable,'' which is not what was shown.
 
-Reducing a language \emph{to} an undecidable language proves nothing about it: by Q2(b), even a decidable language such as $\emptyset$ satisfies $\emptyset \lT \Lacc$, so this style of argument would ``prove'' that $\emptyset$ is undecidable.
+Reducing a language to an undecidable language proves nothing about it.
+By Q2(b), even a decidable language such as $\emptyset$ satisfies $\emptyset \lT \Lacc$, so this style of argument would ``prove'' that $\emptyset$ is undecidable.
 What is needed is a reduction in the other direction, $\Lacc \lT \overline{\Lb}$ (or $\Lb \lT \overline{\Lb}$, which follows from Q2(a) with $L = \Lb$, since $\Lb$ is known to be undecidable).
 Only showing that a decider for $\overline{\Lb}$ would yield a decider for a known undecidable language gives a contradiction.
 
 (A smaller slip: with the lecture definition $\Lb = \set{\inner{M} : M(\inner{M}) \text{ does not accept}}$, the line ``$\inner{M} \in \Lb \Longrightarrow M(\inner{M})$ rejects'' is inaccurate, since $M(\inner{M})$ could also loop.
-This does not break the chain, because looping also gives $(\inner{M},\inner{M}) \notin \Lacc$, so the next line still holds.
-The machine $M_{\overline{\text{BARBER}}}$ does decide $\overline{\Lb}$ relative to $D_{\text{ACC}}$; the fatal problem is what the proof concludes from that.)
+This does not break the chain, because looping also gives $(\inner{M}, \inner{M}) \notin \Lacc$, so the next line still holds.
+The machine $\Mb$ really does decide $\overline{\Lb}$ relative to $D_{\text{ACC}}$; the fatal problem is what the proof concludes from that.)
 
 \qpage{Q4.2 Professor $\Upsilon$'s reductions (b)}
 
 \textbf{The error: line 2 runs $M(x)$ directly, so $M_{\text{ACC}}$ does not halt on every input and is not a decider.}
 
-A Turing reduction $\Lacc \lT L_{\text{LOOP}}$ must be a machine that \emph{decides} $\Lacc$ given the oracle, which in particular means it must halt on every input.
-The oracle is the only tool that is guaranteed to return; the code being reduced from, $M$, is an arbitrary Turing machine, and simulating it can take forever.
-Precisely when $(\inner{M}, x) \notin \Lacc$ because $M(x)$ loops, the simulation on line 2 never finishes, so lines 3--5 are never reached and $M_{\text{ACC}}$ loops as well.
+A Turing reduction $\Lacc \lT \Lloop$ must be a machine that decides $\Lacc$ given the oracle, which in particular means it must halt on every input.
+The oracle is the only tool that is guaranteed to return.
+The machine being reduced from, $M$, is an arbitrary Turing machine, and simulating it can take forever.
+Exactly when $(\inner{M}, x) \notin \Lacc$ because $M(x)$ loops, the simulation on line 2 never finishes, so lines 3 to 5 are never reached and $M_{\text{ACC}}$ loops as well.
 
 The proof hides this in the second chain:
 \begin{align*}
-  (\inner{M},x) \notin \Lacc &\Longrightarrow M(x) \text{ loops or rejects} \\
-  &\Longrightarrow D_{\text{LOOP}}(\inner{M},x) \text{ accepts or } M(x) \text{ rejects} \\
+  (\inner{M}, x) \notin \Lacc &\Longrightarrow M(x) \text{ loops or rejects} \\
+  &\Longrightarrow D_{\text{LOOP}}(\inner{M}, x) \text{ accepts or } M(x) \text{ rejects} \\
   &\Longrightarrow M_{\text{ACC}} \text{ rejects}.
 \end{align*}
-The last implication is false in the ``loops'' case: the fact that $D_{\text{LOOP}}(\inner{M},x)$ would accept is irrelevant, because $M_{\text{ACC}}$ is stuck on line 2 and never asks the oracle.
+The last implication is false in the ``loops'' case: the fact that $D_{\text{LOOP}}(\inner{M}, x)$ would accept is irrelevant, because $M_{\text{ACC}}$ is stuck on line 2 and never asks the oracle.
 So $M_{\text{ACC}}$ does not reject these inputs, it fails to halt, and the claim ``$M_{\text{ACC}}$ decides $\Lacc$'' is unproven.
 (The first chain is fine: if $M(x)$ accepts, the simulation finishes and line 3 accepts.)
 
-The statement itself is true, and the fix is to consult the oracle \emph{before} running anything: first ask $D_{\text{LOOP}}(\inner{M}, x)$; if it accepts, reject; otherwise $M(x)$ is guaranteed to halt, so it is now safe to run $M(x)$ and return its answer.
+The statement itself is true, and the fix is to consult the oracle before running anything: first ask $D_{\text{LOOP}}(\inner{M}, x)$; if it accepts, reject; otherwise $M(x)$ is guaranteed to halt, so it is now safe to run $M(x)$ and return its answer.
 
 \qpage{Q5.1 A powerful diagonalization (a)}
 
@@ -336,12 +345,12 @@ Let $A$ be countably infinite.
 Then its elements can be listed without repetition as $A = \set{a_1, a_2, a_3, \ldots}$.
 ``Uncountably infinite'' means infinite and not countable, so I show both.
 
-\textbf{$\pow{A}$ is infinite.}
-The singletons $\set{a_1}, \set{a_2}, \set{a_3}, \ldots$ are infinitely many distinct subsets of $A$, hence infinitely many distinct elements of $\pow{A}$.
+\textbf{$\PS(A)$ is infinite.}
+The singletons $\set{a_1}, \set{a_2}, \set{a_3}, \ldots$ are infinitely many distinct subsets of $A$, hence infinitely many distinct elements of $\PS(A)$.
 
-\textbf{$\pow{A}$ is not countable.}
-Suppose for contradiction that $\pow{A}$ is countable.
-Since it is infinite, there is an enumeration $S_1, S_2, S_3, \ldots$ of $\pow{A}$ in which every subset of $A$ appears (as some $S_j$).
+\textbf{$\PS(A)$ is not countable.}
+Suppose for contradiction that $\PS(A)$ is countable.
+Since it is infinite, there is an enumeration $S_1, S_2, S_3, \ldots$ of $\PS(A)$ in which every subset of $A$ appears (as some $S_j$).
 Picture the infinite table whose row $i$ is the subset $S_i$ and whose column $j$ is the element $a_j$, with entry $(i,j)$ equal to $1$ if $a_j \in S_i$ and $0$ otherwise:
 \[
   \begin{array}{c|cccc}
@@ -354,11 +363,11 @@ Picture the infinite table whose row $i$ is the subset $S_i$ and whose column $j
 \]
 Now define the ``flipped diagonal'' set
 \[
-  D = \set{a_i : a_i \notin S_i} \subseteq A .
+  D = \set{a_i : a_i \notin S_i} \subseteq A.
 \]
 In the table, $D$ is the row obtained by flipping every entry on the diagonal: $a_i \in D$ if and only if entry $(i,i)$ is $0$.
 
-$D$ is a subset of $A$, so $D \in \pow{A}$, and therefore $D = S_j$ for some index $j$.
+$D$ is a subset of $A$, so $D \in \PS(A)$, and therefore $D = S_j$ for some index $j$.
 Ask whether $a_j \in D$:
 \begin{itemize}
   \item If $a_j \in D$, then by the definition of $D$, $a_j \notin S_j = D$, a contradiction.
@@ -366,15 +375,15 @@ Ask whether $a_j \in D$:
 \end{itemize}
 Either way we reach a contradiction, so no such $j$ exists: $D$ differs from every $S_i$ (precisely in whether it contains $a_i$).
 This contradicts the assumption that the list $S_1, S_2, \ldots$ contains every subset of $A$.
-Hence $\pow{A}$ is not countable.
+Hence $\PS(A)$ is not countable.
 
-Together, $\pow{A}$ is uncountably infinite.
+Together, $\PS(A)$ is uncountably infinite.
 
 \qpage{Q5.2 A powerful diagonalization (b)}
 
 Let $L \subseteq \Sigma^*$ be an infinite language.
-The subsets of $L$ are exactly the languages $L' \subseteq L$, so the claim is that not every element of $\pow{L}$ is decidable.
-The plan: $\pow{L}$ is uncountable by part (a), but there are only countably many decidable languages, so most subsets of $L$ are undecidable.
+The subsets of $L$ are exactly the languages $L' \subseteq L$, so the claim is that not every element of $\PS(L)$ is decidable.
+The plan: $\PS(L)$ is uncountable by part (a), but there are only countably many decidable languages, so most subsets of $L$ are undecidable.
 
 \textbf{Step 1: $L$ is countably infinite.}
 $\Sigma$ is finite, so $\Sigma^*$ is countable: list its strings by length, and within each length in alphabetical order.
@@ -383,7 +392,7 @@ Now go through this list and delete every string that is not in $L$.
 What remains is a list $\ell_1, \ell_2, \ell_3, \ldots$ that contains every string of $L$ exactly once, and it is infinite because $L$ is infinite.
 So $L$ is countably infinite.
 
-\textbf{Step 2: $\pow{L}$ is uncountable.}
+\textbf{Step 2: $\PS(L)$ is uncountable.}
 This is part (a) applied to $A = L$.
 
 \textbf{Step 3: there are only countably many decidable languages.}
@@ -395,27 +404,27 @@ So this map is an injection from the set of decidable languages into a countable
 
 \textbf{Step 4: conclusion.}
 Suppose for contradiction that every subset $L' \subseteq L$ were decidable.
-Then $\pow{L}$ would be a subset of the set of decidable languages.
-A subset of a countable set is countable (list the big set and delete the elements not in the subset, as in Step 1), so $\pow{L}$ would be countable, contradicting Step 2.
+Then $\PS(L)$ would be a subset of the set of decidable languages.
+A subset of a countable set is countable (list the big set and delete the elements not in the subset, as in Step 1), so $\PS(L)$ would be countable, contradicting Step 2.
 Hence some subset $L' \subseteq L$ is undecidable.
 
 (In fact the argument shows much more: all but countably many of the uncountably many subsets of $L$ are undecidable.)
 
 \qpage{Q6.1 Deciding Undecidability (a)}
 
-\textbf{$L = \set{\inner{M,x} : M(x) \text{ halts within } 2^{\abs{x}} \text{ steps}}$ is decidable.}
+$L = \set{\inner{M, x} : M(x) \text{ halts within } 2^{\abs{x}} \text{ steps}}$ is \textbf{decidable}.
 
 The point is that the number of steps to check is a finite number that can be computed from the input, so we can simulate $M$ for exactly that long and then stop, whatever $M$ does afterwards.
 
 \begin{algorithmic}[1]
   \Require{$\inner{M, x}$, where $M$ is a Turing machine and $x$ a string}
   \Ensure{accept if $M(x)$ halts within $2^{\abs{x}}$ steps, reject otherwise}
-  \Function{$D_L$}{$\inner{M,x}$}
+  \Function{$D_L$}{$\inner{M, x}$}
     \State $T \gets 2^{\abs{x}}$ \Comment{compute $\abs{x}$ by scanning $x$, then double a counter $\abs{x}$ times}
     \State Simulate $M$ on input $x$, one step at a time, keeping a count of the steps simulated
     \If{$M$ enters a halting state (accept or reject) after at most $T$ steps} \Return accept
     \EndIf
-    \If{$T$ steps have been simulated and $M$ has not halted} \State stop the simulation and \Return reject
+    \If{$T$ steps have been simulated and $M$ has not halted} stop the simulation and \Return reject
     \EndIf
   \EndFunction
 \end{algorithmic}
@@ -433,15 +442,16 @@ The simulation is exact, so $M$ halts within the first $T$ simulated steps if an
   \item If $\inner{M,x} \notin L$, then $M(x)$ has not halted after $2^{\abs{x}}$ steps (it halts later or never), so the simulation reaches the step bound $T$ without seeing a halting state, and $D_L$ rejects.
 \end{itemize}
 So $D_L$ decides $L$, and $L$ is decidable.
-(Unlike $\Lh$, this language only asks about a \emph{bounded} prefix of the computation, which is why it is decidable.)
+(Unlike $\Lh$, this language only asks about a bounded prefix of the computation, which is why it is decidable.)
 
 \qpage{Q6.2 Deciding Undecidability (b)}
 
-\textbf{$\Lsl$ is undecidable.} Recall $\Lsl = \set{\inner{M} : M \text{ loops on input } \inner{M}}$.
+$\Lsl$ is \textbf{undecidable}.
+Recall $\Lsl = \set{\inner{M} : M \text{ loops on input } \inner{M}}$.
 I show $\Lh \lT \Lsl$; since $\Lh$ is undecidable (lecture), so is $\Lsl$.
 
 Let $O$ be an oracle that decides $\Lsl$: $O$ halts on every input, and $O(\inner{N})$ accepts if and only if $N(\inner{N})$ loops.
-The reduction turns the question ``does $M$ halt on $x$?'' into a question about a machine $M'$ whose behavior on \emph{every} input, in particular on its own code, is the same as $M$'s behavior on $x$.
+The idea is to turn the question ``does $M$ halt on $x$?'' into a question about a machine $M'$ that behaves the same way on every input, in particular on its own code, as $M$ does on $x$.
 
 \begin{algorithmic}[1]
   \Require{$(\inner{M}, x)$, where $M$ is a Turing machine and $x$ a string}
@@ -450,7 +460,7 @@ The reduction turns the question ``does $M$ halt on $x$?'' into a question about
     \State Construct the code $\inner{M'}$ of the following machine $M'$:
     \Statex \hspace{2em} \textbf{function} $M'(w)$: \Comment{$w$ is ignored}
     \Statex \hspace{4em} Run $M(x)$ \Comment{$x$ and $\inner{M}$ are hard-coded into $M'$}
-    \Statex \hspace{4em} \Return accept
+    \Statex \hspace{4em} \textbf{return} accept
     \If{$O(\inner{M'})$ accepts} \Return reject
     \Else{} \Return accept
     \EndIf
@@ -458,7 +468,7 @@ The reduction turns the question ``does $M$ halt on $x$?'' into a question about
 \end{algorithmic}
 
 \textbf{$M_{\text{HALT}}$ always halts.}
-Constructing $\inner{M'}$ is a purely syntactic operation: $M_{\text{HALT}}$ writes down a fixed template of code with the strings $\inner{M}$ and $x$ pasted in.
+Constructing $\inner{M'}$ is just string manipulation: $M_{\text{HALT}}$ writes down a fixed template of code with the strings $\inner{M}$ and $x$ pasted in.
 It does not run $M$ or $M'$.
 Then it makes one call to $O$, which halts on every input because $O$ decides $\Lsl$.
 
@@ -474,14 +484,12 @@ In particular, taking $w = \inner{M'}$:
 \textbf{Correctness.}
 By the definition of $\Lh$, the key property, the definition of $\Lsl$, the fact that $O$ decides $\Lsl$, and the code of $M_{\text{HALT}}$,
 \begin{align*}
-  (\inner{M}, x) \in \Lh
-  &\Longrightarrow M(x) \text{ halts} \\
+  (\inner{M}, x) \in \Lh &\Longrightarrow M(x) \text{ halts} \\
   &\Longrightarrow M'(\inner{M'}) \text{ halts} \\
   &\Longrightarrow \inner{M'} \notin \Lsl \\
   &\Longrightarrow O(\inner{M'}) \text{ rejects} \\
   &\Longrightarrow M_{\text{HALT}} \text{ accepts}, \\[0.5em]
-  (\inner{M}, x) \notin \Lh
-  &\Longrightarrow M(x) \text{ loops} \\
+  (\inner{M}, x) \notin \Lh &\Longrightarrow M(x) \text{ loops} \\
   &\Longrightarrow M'(\inner{M'}) \text{ loops} \\
   &\Longrightarrow \inner{M'} \in \Lsl \\
   &\Longrightarrow O(\inner{M'}) \text{ accepts} \\
@@ -493,7 +501,8 @@ Therefore $\Lsl$ is undecidable.
 
 \qpage{Q6.3 Deciding Undecidability (c)}
 
-\textbf{$\Lal$ is undecidable.} Recall
+$\Lal$ is \textbf{undecidable}.
+Recall
 \[
   \Lal = \set{(\inner{M}, x, y) : M \text{ loops on } x \text{ and loops on } y}.
 \]
@@ -520,13 +529,11 @@ It never runs $M$.
 By the definition of $\Lal$ with $y = x$, the condition ``$M$ loops on $x$ and $M$ loops on $x$'' holds exactly when $M(x)$ loops.
 Hence, using the definition of $\Lh$, the fact that $O$ decides $\Lal$, and the code of $M_{\text{HALT}}$,
 \begin{align*}
-  (\inner{M}, x) \in \Lh
-  &\Longrightarrow M(x) \text{ halts} \\
+  (\inner{M}, x) \in \Lh &\Longrightarrow M(x) \text{ halts} \\
   &\Longrightarrow (\inner{M}, x, x) \notin \Lal \\
   &\Longrightarrow O(\inner{M}, x, x) \text{ rejects} \\
   &\Longrightarrow M_{\text{HALT}} \text{ accepts}, \\[0.5em]
-  (\inner{M}, x) \notin \Lh
-  &\Longrightarrow M(x) \text{ loops} \\
+  (\inner{M}, x) \notin \Lh &\Longrightarrow M(x) \text{ loops} \\
   &\Longrightarrow (\inner{M}, x, x) \in \Lal \\
   &\Longrightarrow O(\inner{M}, x, x) \text{ accepts} \\
   &\Longrightarrow M_{\text{HALT}} \text{ rejects}.
@@ -542,8 +549,8 @@ Let $O$ be an oracle that decides $\Lph$: $O$ halts on every input, and $O(\inne
 
 \textbf{Idea.}
 For a string $z$, write $h(z)$ for the number of prefixes of $z$ on which $M$ halts.
-A string of length $\ell$ has $\ell+1$ prefixes, so $h(z)$ is a well-defined integer in $\set{0, 1, \ldots, \abs{z}+1}$, and exactly one of the queries $(\inner{M}, z, k)$ for $k = 0, \ldots, \abs{z}+1$ is in $\Lph$, namely the one with $k = h(z)$.
-So by calling the oracle at most $\abs{z}+2$ times, we can \emph{compute} $h(z)$.
+A string of length $\ell$ has $\ell + 1$ prefixes, so $h(z)$ is a well-defined integer in $\set{0, 1, \ldots, \abs{z}+1}$, and exactly one of the queries $(\inner{M}, z, k)$ for $k = 0, \ldots, \abs{z}+1$ is in $\Lph$, namely the one with $k = h(z)$.
+So by calling the oracle at most $\abs{z} + 2$ times, we can compute $h(z)$.
 Now let $x'$ be $x$ with its last symbol removed.
 The prefixes of $x$ are the prefixes of $x'$ together with $x$ itself (and $x$ is not a prefix of $x'$, being longer), so
 \[
@@ -591,13 +598,11 @@ First let $x = \varepsilon$.
 Its only prefix is $\varepsilon$, so $h(\varepsilon) = 1$ if $M(\varepsilon)$ halts and $h(\varepsilon) = 0$ otherwise.
 Hence
 \begin{align*}
-  (\inner{M},\varepsilon) \in \Lh
-  &\Longrightarrow h(\varepsilon) = 1 \\
+  (\inner{M}, \varepsilon) \in \Lh &\Longrightarrow h(\varepsilon) = 1 \\
   &\Longrightarrow (\inner{M}, \varepsilon, 1) \in \Lph \\
   &\Longrightarrow O(\inner{M}, \varepsilon, 1) \text{ accepts} \\
   &\Longrightarrow M_{\text{HALT}} \text{ accepts}, \\[0.5em]
-  (\inner{M},\varepsilon) \notin \Lh
-  &\Longrightarrow h(\varepsilon) = 0 \\
+  (\inner{M}, \varepsilon) \notin \Lh &\Longrightarrow h(\varepsilon) = 0 \\
   &\Longrightarrow (\inner{M}, \varepsilon, 1) \notin \Lph \\
   &\Longrightarrow O(\inner{M}, \varepsilon, 1) \text{ rejects} \\
   &\Longrightarrow M_{\text{HALT}} \text{ rejects}.
@@ -607,13 +612,11 @@ The prefixes of $x$ are exactly the prefixes of $x'$ (those of length $\le \abs{
 By the previous paragraph, the two calls to \algo{CountHalt} give $c = h(x)$ and $c' = h(x')$.
 So
 \begin{align*}
-  (\inner{M},x) \in \Lh
-  &\Longrightarrow M(x) \text{ halts} \\
+  (\inner{M}, x) \in \Lh &\Longrightarrow M(x) \text{ halts} \\
   &\Longrightarrow h(x) = h(x') + 1 \\
   &\Longrightarrow c = c' + 1 \\
   &\Longrightarrow M_{\text{HALT}} \text{ accepts}, \\[0.5em]
-  (\inner{M},x) \notin \Lh
-  &\Longrightarrow M(x) \text{ loops} \\
+  (\inner{M}, x) \notin \Lh &\Longrightarrow M(x) \text{ loops} \\
   &\Longrightarrow h(x) = h(x') \\
   &\Longrightarrow c \ne c' + 1 \\
   &\Longrightarrow M_{\text{HALT}} \text{ rejects}.
@@ -621,23 +624,23 @@ So
 So $M_{\text{HALT}}$ decides $\Lh$ using an oracle for $\Lph$, i.e., $\Lh \lT \Lph$.
 Since $\Lh$ is undecidable, a decider for $\Lph$ cannot exist (it would give a decider for $\Lh$), so $\Lph$ is undecidable.
 
-\textbf{Remark (a one-call alternative).}
-One can also avoid counting by building a new machine: let $M'$ be the machine that, on input $w$, accepts immediately if $w \ne x$, and otherwise runs $M(x)$ and then accepts.
+\textbf{Another way to do it.}
+The counting can be avoided by building a new machine: let $M'$ be the machine that, on input $w$, accepts immediately if $w \ne x$, and otherwise runs $M(x)$ and then accepts.
 $M'$ halts on all $\abs{x}$ proper prefixes of $x$ (they differ from $x$), and halts on the prefix $x$ itself if and only if $M(x)$ halts.
 So $M'$ halts on exactly $\abs{x}+1$ prefixes of $x$ if and only if $M(x)$ halts, and the single query $O(\inner{M'}, x, \abs{x}+1)$ decides $\Lh$.
 
 \qpage{Q8 We have a common language! (optional extra credit)}
 
-Let $A, B \subseteq \bit^*$ be arbitrary languages.
+Let $A, B \subseteq \set{0,1}^*$ be arbitrary languages.
 Define
 \[
-  C = \set{0x : x \in A} \cup \set{1x : x \in B} \subseteq \bit^* .
+  C = \set{0x : x \in A} \cup \set{1x : x \in B} \subseteq \set{0,1}^*.
 \]
 That is, $C$ stores $A$ and $B$ side by side, tagged by their first bit: a string of $C$ starting with $0$ is a member of $A$ with a $0$ in front, and a string of $C$ starting with $1$ is a member of $B$ with a $1$ in front.
 (The empty string is not in $C$.)
 
 \textbf{Membership in $C$ is easy to read off.}
-For every $x \in \bit^*$: $0x \in C$ if and only if $x \in A$.
+For every $x \in \set{0,1}^*$: $0x \in C$ if and only if $x \in A$.
 Indeed, if $x \in A$ then $0x \in C$ by definition.
 Conversely, if $0x \in C$, then $0x$ starts with $0$, so it cannot be of the form $1y$; hence $0x = 0x'$ for some $x' \in A$, and stripping the first bit gives $x = x' \in A$.
 In the same way, $1x \in C$ if and only if $x \in B$.
@@ -646,7 +649,7 @@ In the same way, $1x \in C$ if and only if $x \in B$.
 Let $O$ be an oracle that decides $C$.
 
 \begin{algorithmic}[1]
-  \Require{A string $x \in \bit^*$}
+  \Require{A string $x \in \set{0,1}^*$}
   \Ensure{accept if $x \in A$, reject otherwise}
   \Function{$M_A$}{$x$}
     \State \Return $O(0x)$
@@ -669,7 +672,7 @@ Symmetrically, the machine $M_B(x)$ that returns $O(1x)$ always halts, and
 \end{align*}
 So $B \lT C$.
 
-Hence for any two languages $A$ and $B$ over $\bit$ there is a language $C$ over $\bit$ with $A \lT C$ and $B \lT C$.
+Hence for any two languages $A$ and $B$ over $\set{0,1}$ there is a language $C$ over $\set{0,1}$ with $A \lT C$ and $B \lT C$.
 (Note that $A$ and $B$ may both be undecidable, and $C$ is then undecidable too, which is fine: a Turing reduction only compares difficulty, it does not require any of the languages to be decidable.)
 
 \end{document}
