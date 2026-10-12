@@ -70,10 +70,10 @@ Let $p'$ be the element of $\set{0}\cup\OPT$ right before $q$ \ldots so $p' < i_
 Fact 1 gives $\mathrm{dist}(i_{\text{diff}},q) \le \mathrm{dist}(p',q) \le R$.}
 \end{quote}
 
-What was deficient: the logic is sound, but the organization is bad.
+What was deficient: nothing is wrong logically, but the organization is bad.
 I proved validity by taking an arbitrary pair of consecutive stops $p < q$ in $\OPT'$ and splitting into cases on where the pair sits relative to $i_{\text{diff}}$.
 That forces the reader to track two helper facts, three cases, and extra names like $p'$, just to check something that has a two-line explanation.
-A grader would have a hard time finding the three things that actually matter.
+If I were grading it I would have a hard time finding the three things that actually matter.
 
 How to fix it: the posted solution organizes the same argument around the stretches of $\OPT'$ instead of around arbitrary pairs.
 There are only three kinds of stretches.
@@ -88,7 +88,7 @@ Next time I will first identify what actually changes between $\OPT$ and $\OPT'$
 \textbf{Recurrence.}
 For $n \le 2$ the function does a constant amount of work (one comparison and possibly a swap), so $T(1) = T(2) = \Theta(1)$.
 For $n > 2$ it computes $t = \ceil{2n/3}$, makes three recursive calls on subarrays of size $t$, and does nothing else.
-Passing a subarray is just passing two indices, so the work outside the recursive calls is $\Theta(1)$.
+Passing a subarray just means passing two indices, nothing gets copied, so the work outside the recursive calls is $\Theta(1)$.
 Ignoring the ceiling, as allowed,
 \[
   T(n) = 3\,T\!\left(\tfrac{2n}{3}\right) + \Theta(1) \qquad (n > 2), \qquad T(1) = T(2) = \Theta(1).
@@ -100,7 +100,7 @@ The critical exponent is
 \[
   \log_b a = \log_{3/2} 3 = \frac{\ln 3}{\ln (3/2)} \approx 2.71 .
 \]
-Since $f(n) = O(n^{\log_b a - \varepsilon})$ for, say, $\varepsilon = 1$, we are in the first case of the Master Theorem (the leaves dominate), and
+Since $f(n) = O(n^{\log_b a - \varepsilon})$ for, say, $\varepsilon = 1$, this is the first case of the Master Theorem, where the leaves of the recursion tree dominate, and
 \[
   T(n) = \Theta\!\left(n^{\log_{3/2} 3}\right) \approx \Theta(n^{2.71}).
 \]
@@ -108,7 +108,7 @@ So \algo{StoogeSort} is slower than even insertion sort.
 
 \qpage{Q2.2 Keeping things fresh with potpourri (b)}
 
-No valid potential function exists, because \algo{Alg} does not halt on every valid input.
+There is no valid potential function, because \algo{Alg} does not even halt on every valid input.
 
 \textbf{An input on which it runs forever.}
 Take $a = 4$ and $b = 2$ (both powers of two).
@@ -124,7 +124,7 @@ On the run above, the pair of arguments $(4,2)$ comes back after two calls.
 If $\Phi$ were a valid potential function, we would need $\Phi(4,2) > \Phi(2,4) > \Phi(4,2)$, which is impossible.
 So no potential function can exist for this algorithm.
 
-(The reason behind it: writing $a = 2^i$ and $b = 2^j$, every call keeps $i + j$ fixed and changes $i - j$ by exactly $2$.
+(What is going on: write $a = 2^i$ and $b = 2^j$. Every call keeps $i + j$ fixed and changes $i - j$ by exactly $2$.
 When $i + j$ is odd, $i - j$ is odd, so it can never become $0$, and once $|i-j| = 1$ the two calls just swap back and forth.)
 
 \qpage{Q2.3 Keeping things fresh with potpourri (c)}
@@ -243,7 +243,7 @@ Each state records what has been read so far:
   \item $B$: the input so far is $a^+ (b \mid c)^+$. This is in the language, so $B$ accepts.
   \item $D$: the input so far cannot be extended to a string in the language, either because it started with $b$ or $c$, or because an $a$ appeared after some $b$ or $c$. $D$ is a dead state.
 \end{itemize}
-The transitions keep these descriptions true: from $s$, an $a$ gives $a^+$ and anything else is dead; from $A$, another $a$ keeps $a^+$ and a $b$ or $c$ moves to $a^+(b|c)^+$; from $B$, more $b$'s and $c$'s stay in $B$, while an $a$ breaks the pattern.
+Checking that the transitions keep these descriptions true: from $s$, an $a$ gives $a^+$ and anything else is dead; from $A$, another $a$ keeps $a^+$ and a $b$ or $c$ moves to $a^+(b|c)^+$; from $B$, more $b$'s and $c$'s stay in $B$, while an $a$ breaks the pattern.
 A string is in $a^+(b|c)^*$ exactly when it is of the form $a^+$ or $a^+(b|c)^+$, i.e., exactly when the DFA ends in $A$ or $B$.
 
 \qpage{Q4.2 Constructing DFAs (b)}
@@ -289,7 +289,7 @@ If it holds for $w$, then appending a $0$ increases $\#_0$ by one and leaves $\#
 So the claim holds for all $w$ by induction on $\abs{w}$.
 
 Therefore the DFA ends in the accepting state $(1,1)$ exactly when $\#_0(w) \bmod 3 = 1$ and $\#_1(w) \bmod 2 = 1$, which is the language asked for.
-As a check against the examples: $01$ ends in $(1,1)$, $01000$ has four $0$'s and one $1$ so it ends in $(1,1)$, and $1110$ has one $0$ and three $1$'s so it ends in $(1,1)$; while $\varepsilon \to (0,0)$, $1 \to (0,1)$, $001 \to (2,1)$, $0011 \to (2,0)$, and $000111 \to (0,1)$ are all rejected.
+Checking the examples from the problem: $01$ ends in $(1,1)$, $01000$ has four $0$'s and one $1$ so it ends in $(1,1)$, and $1110$ has one $0$ and three $1$'s so it ends in $(1,1)$; while $\varepsilon \to (0,0)$, $1 \to (0,1)$, $001 \to (2,1)$, $0011 \to (2,0)$, and $000111 \to (0,1)$ are all rejected.
 
 \qpage{Q5.1 Turing machines (a)}
 
@@ -433,13 +433,13 @@ I use them as subroutines.
   \EndFunction
 \end{algorithmic}
 
-\textbf{It always halts.}
+\textbf{Halting.}
 The algorithm makes at most three calls, to $D_3$, $D_1$, and $D_2$, each of which halts on every input because the $L_i$ are decidable.
 Everything else is a constant number of comparisons.
 So \algo{DecideL} halts on every input.
 
-\textbf{It is correct.}
-Unfold the definition: $x \in L$ if and only if $x \in L_3$, or ($x \in L_1$ and $x \notin L_2$).
+\textbf{Correctness.}
+Spelling out the definition, $x \in L$ if and only if $x \in L_3$, or ($x \in L_1$ and $x \notin L_2$).
 \begin{itemize}
   \item If $x \in L$ and $x \in L_3$, then $D_3(x)$ accepts, so the algorithm accepts at the first \textbf{if}.
   \item If $x \in L$ and $x \notin L_3$, then $x \in L_1$ and $x \notin L_2$, so $D_1(x)$ accepts and $D_2(x)$ rejects, and the algorithm accepts at the second \textbf{if}.
@@ -506,7 +506,7 @@ But $M$ treats both strings the same way, so it gives the wrong answer on one of
 This contradicts the assumption that $M$ decides $L_{\text{home}}$.
 Since $p$ was arbitrary, no DFA decides $L_{\text{home}}$.
 
-Intuitively, a DFA has a fixed finite memory, but to know whether Pac-Man will get back home it must remember how far right it has gone, which can be any integer.
+The intuition is just that a DFA has finitely many states, but to know whether Pac-Man gets home it would need to remember how far right it has gone, and that can be any integer.
 
 \qpage{Q7.3 Pac-Man's journey (c)}
 
@@ -534,7 +534,7 @@ For $i = 0$ both are $(0,0)$, the starting position.
 If the claim holds after iteration $i-1$, then the $i$-th iteration changes $(x,y)$ by exactly the unit move that command $s_i$ makes (left decreases $x$, right increases $x$, up increases $y$, down decreases $y$), so the claim holds after iteration $i$.
 By induction, after the loop $(x,y)$ is Pac-Man's final position, and the algorithm accepts exactly when that position is $(0,0)$.
 
-The loop runs $n$ times and the algorithm clearly halts, so this is a decider for $L_{\text{home}}$.
+The loop runs $n$ times, so the algorithm halts on every input, and this is a decider for $L_{\text{home}}$.
 The difference from a DFA is that the counters $x$ and $y$ can grow without bound, which a finite set of states cannot do.
 
 \qpage{Q8.3 Decision problems and languages (c)}
@@ -623,7 +623,7 @@ The difference from a DFA is that the counters $x$ and $y$ can grow without boun
   \[
     L_{\text{halt}} = \set{\inner{P,x} : P \text{ is a valid C++ program and } P \text{ halts when run on input } x}.
   \]
-  (This is the halting problem for C++ programs. It is a perfectly well-defined language, even though, as we will see, no algorithm decides it.)
+  (This is just the halting problem with C++ as the programming language. $L_{\text{halt}}$ is a perfectly well-defined language even though no algorithm decides it.)
 \end{enumerate}
 
 \qpage{Q9.1 Trophy testing (a, optional)}
@@ -666,7 +666,7 @@ I show $N(d) \le d + N(d-1)$ with $N(0) = 0$, which gives $N(d) \le d(d+1)/2 = n
 With $0$ drops there is no information, so only one possibility can be distinguished: $N(0) = 0$.
 
 Now consider any strategy with $d \ge 1$ drops, and let $h$ be the height of its first drop.
-The adversary (nature) can choose either outcome.
+I have to be ready for either outcome of that drop.
 \begin{itemize}
   \item \textbf{If it breaks}, the LBH is in $\set{1, \ldots, h}$, and only one block remains.
   With one block, no height below $h$ can be skipped: if the strategy skipped some height $t < h$ and the block then broke at a higher height, it could not tell whether the LBH was $t$ or that higher height, and there are no blocks left to find out.
