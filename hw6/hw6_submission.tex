@@ -313,11 +313,6 @@ Reducing a language to an undecidable language proves nothing about it.
 By Q2(b), even a decidable language such as $\emptyset$ satisfies $\emptyset \lT \Lacc$, so this style of argument would ``prove'' that $\emptyset$ is undecidable.
 What is needed is a reduction in the other direction, $\Lacc \lT \overline{\Lb}$ (or $\Lb \lT \overline{\Lb}$, which follows from Q2(a) with $L = \Lb$, since $\Lb$ is known to be undecidable).
 Only showing that a decider for $\overline{\Lb}$ would yield a decider for a known undecidable language gives a contradiction.
-
-(A smaller slip: with the lecture definition $\Lb = \set{\inner{M} : M(\inner{M}) \text{ does not accept}}$, the line ``$\inner{M} \in \Lb \Longrightarrow M(\inner{M})$ rejects'' is inaccurate, since $M(\inner{M})$ could also loop.
-This does not break the chain, because looping also gives $(\inner{M}, \inner{M}) \notin \Lacc$, so the next line still holds.
-The machine $\Mb$ really does decide $\overline{\Lb}$ relative to $D_{\text{ACC}}$; the fatal problem is what the proof concludes from that.)
-
 \qpage{Q4.2 Professor $\Upsilon$'s reductions (b)}
 
 \textbf{The error: line 2 runs $M(x)$ directly, so $M_{\text{ACC}}$ does not halt on every input and is not a decider.}
