@@ -619,11 +619,6 @@ So
 So $M_{\text{HALT}}$ decides $\Lh$ using an oracle for $\Lph$, i.e., $\Lh \lT \Lph$.
 Since $\Lh$ is undecidable, a decider for $\Lph$ cannot exist (it would give a decider for $\Lh$), so $\Lph$ is undecidable.
 
-\textbf{Another way to do it.}
-The counting can be avoided by building a new machine: let $M'$ be the machine that, on input $w$, accepts immediately if $w \ne x$, and otherwise runs $M(x)$ and then accepts.
-$M'$ halts on all $\abs{x}$ proper prefixes of $x$ (they differ from $x$), and halts on the prefix $x$ itself if and only if $M(x)$ halts.
-So $M'$ halts on exactly $\abs{x}+1$ prefixes of $x$ if and only if $M(x)$ halts, and the single query $O(\inner{M'}, x, \abs{x}+1)$ decides $\Lh$.
-
 \qpage{Q8 We have a common language! (optional extra credit)}
 
 Let $A, B \subseteq \set{0,1}^*$ be arbitrary languages.
