@@ -1,0 +1,679 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{fancyhdr}
+\usepackage{enumerate}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+
+\newcommand{\hwnum}{7}
+
+% page header, same as the posted solutions
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{EECS 376: Foundations of Computer Science\\University of Michigan, Fall 2026}
+\rhead{\vspace{\baselineskip}Solutions to Homework \hwnum}
+\cfoot{\thepage}
+\setlength{\headheight}{28pt}
+
+% pseudocode labels
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+% notation
+\newcommand{\set}[1]{\left\{#1\right\}}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\inner}[1]{\langle #1 \rangle}
+\newcommand{\algo}[1]{\textsc{#1}}
+\newcommand{\lT}{\leq_T}
+\newcommand{\Lh}{L_{\text{HALT}}}
+\newcommand{\Lacc}{L_{\text{ACC}}}
+\newcommand{\Lb}{L_{\text{BARBER}}}
+\newcommand{\Leacc}{L_{\varepsilon\text{-ACC}}}
+\newcommand{\Lrec}{L_{\textsc{Rec}}}
+\newcommand{\Lbh}{L_{\text{BOUNDED-HALT}}}
+\newcommand{\Llh}{L_{\text{LINEAR-HALT}}}
+\newcommand{\Lloops}{L_{\text{LOOPS}}}
+\newcommand{\LSp}{L_{S+}}
+\newcommand{\Llag}{L_{\text{LAG}}}
+\newcommand{\Lsmh}{L_{\text{SmallHalt}}}
+\newcommand{\Ms}{M_{\textsc{Search}}}
+\newcommand{\Mb}{M_{\text{BARBER}}}
+
+% one part per page for Gradescope
+\newcommand{\qpage}[1]{\clearpage\noindent\textbf{\large #1}\par\medskip}
+
+\begin{document}
+
+\noindent\textbf{\large Q0 Before you start; before you submit}\par\medskip
+
+I read Handout 5 on Turing reductions before starting, and the reductions below follow it: name the oracle, give pseudocode for the machine that uses it, show that the machine always halts, and prove correctness in both directions.
+I did not use Rice's Theorem anywhere.
+I did not collaborate with anyone on this homework.
+
+\qpage{Q1 Self assessment}
+
+The part of HW6 with the most room for improvement is Question 3(c), about replacing the oracle $H$ by the machine $M_{SH}$ that decides the finite language $\Lsmh$.
+Here is what I submitted:
+
+\begin{quote}\small
+Replacing $H$ by $M_{SH}$ gives an ordinary Turing machine $M_G'$ (no oracle) that makes one call $M_{SH}(\inner{\Ms}, \varepsilon)$ and returns the opposite answer.
+Whether this ``works'' depends on the length of that query.
+
+\textbf{If $(\inner{\Ms}, \varepsilon)$ has $1000$ or more characters}, it is not in $\Lsmh$ by definition, whatever $\Ms$ does.
+So $M_{SH}$ rejects it and $M_G'$ always accepts, regardless of whether the conjecture is true.
+In this case the solution does not work: $M_G'$'s answer is not based on the behavior of $\Ms$ at all.
+(The correctness chain from part (b) breaks at the step ``$(\inner{\Ms}, \varepsilon) \in \Lh \Longrightarrow$ oracle accepts,'' which is no longer justified.)
+
+\textbf{If $(\inner{\Ms}, \varepsilon)$ has fewer than $1000$ characters}, then $M_{SH}$ agrees with $H$ on this particular query, so the proof from part (b) goes through word for word, and $M_G'$ is a Turing machine with no oracle that accepts on every input if the conjecture is true and rejects on every input otherwise.
+
+This sounds exciting, but it does not help us learn the answer.
+The reason is that the proof that $\Lsmh$ is decidable is non-constructive.
+$\Lsmh$ is finite, so it is decided by a machine that hard-codes the finite list of its members (as in HW5, Q6(a)), but we are not told which strings are on that list.
+Writing down $M_{SH}$ would require knowing, for each of the finitely many pairs of length $< 1000$, whether $M$ halts on $x$, and for the pair $(\inner{\Ms}, \varepsilon)$ that is exactly the question of whether the Goldbach Conjecture is true.
+So $M_{SH}$ exists, but nobody can actually write it down and run it without already having resolved the conjecture.
+
+In fact, the existence of a Turing machine that answers the Goldbach question was never in doubt: one of the two trivial machines ``always accept'' and ``always reject'' is correct, we just do not know which.
+Part (b) is interesting only because the oracle $H$ is a single machine that would answer this and countless other open questions at once, and part (c) shows that the finite restriction $\Lsmh$ does not give us anything like that.
+\end{quote}
+
+What was deficient: I never actually answered the question.
+The problem asks whether the solution from part (b) still works, and the posted solution answers in two sentences: the only query is $(\inner{\Ms}, \varepsilon)$, it has fewer than $1000$ characters, so $M_{SH}$ returns the same answer as $H$ on it and the whole correctness analysis from part (b) goes through.
+I instead split into two cases by the length of the query and treated both as equally plausible, so the real answer is buried in the middle of a case analysis and the rubric item ``state that the query has fewer than $1000$ characters'' is not clearly there.
+I also never said why the query is short.
+Then I spent the second half on the remark about why this does not settle the conjecture, which is interesting but is not what was asked.
+
+How to fix it: start with the answer.
+Yes, it still works.
+$\inner{\Ms}$ is the encoding of the short program from part (a) together with a short \algo{isPrime} subroutine, so even with a generous encoding it is a few hundred characters, and $\varepsilon$ adds nothing, so the pair is well under $1000$ characters.
+Hence $(\inner{\Ms}, \varepsilon) \in \Lsmh$ if and only if $\Ms(\varepsilon)$ halts, which means $M_{SH}$ and $H$ agree on the only query $M_G$ makes.
+The four-line implication chains from part (b) are then unchanged with $M_{SH}$ in place of $H$, and $M_G'$ is an ordinary Turing machine that accepts if and only if the Goldbach Conjecture is true.
+The remark that we do not know what $M_{SH}$ looks like can stay, but as a two-sentence note at the end, not as half of the answer.
+
+\qpage{Q2.1 Warm-up exercises (a)}
+
+\textbf{No.} $L_1 \cap L_2$ is not necessarily decidable.
+
+Counterexample: $L_1 = \Lh$ and $L_2 = \Sigma^*$.
+
+\textbf{$L_1 = \Lh$ is recognizable.}
+This was shown in lecture.
+The recognizer is the universal machine: on input $(\inner{M}, x)$, run $M$ on $x$, and accept as soon as $M$ halts.
+If $M(x)$ halts, the simulation finishes and the machine accepts; if $M(x)$ loops, the simulation never finishes, so the machine does not accept.
+So it accepts exactly the strings in $\Lh$.
+
+\textbf{$L_2 = \Sigma^*$ is decidable.}
+The machine that accepts every input immediately halts on every input and accepts exactly the strings in $\Sigma^*$.
+
+\textbf{$L_1 \cap L_2$ is undecidable.}
+Since $\Lh \subseteq \Sigma^*$, we have $L_1 \cap L_2 = \Lh \cap \Sigma^* = \Lh$, and $\Lh$ is undecidable (proved in lecture).
+
+So $L_1$ is recognizable, $L_2$ is decidable, and $L_1 \cap L_2$ is undecidable.
+This disproves the claim.
+
+The reason this can happen: intersecting with a decidable language can only remove strings, and intersecting with $\Sigma^*$ removes nothing, so the undecidable part of $L_1$ is still there.
+(Part (b) shows that recognizability, on the other hand, does survive.)
+
+\qpage{Q2.2 Warm-up exercises (b)}
+
+\textbf{Yes.} $L_1 \cap L_2$ is always recognizable.
+
+Since $L_1$ is recognizable, there is a Turing machine $R_1$ that accepts exactly the strings in $L_1$ (it may reject or loop on the others).
+Since $L_2$ is decidable, there is a Turing machine $D_2$ that halts on every input and accepts exactly the strings in $L_2$.
+Consider the following machine.
+
+\begin{algorithmic}[1]
+  \Require{A string $x$}
+  \Ensure{accept if $x \in L_1 \cap L_2$; otherwise reject or loop}
+  \Function{$R$}{$x$}
+    \If{$D_2(x)$ rejects} \Return reject
+    \EndIf
+    \State Run $R_1(x)$ \Comment{this may loop, which is allowed for a recognizer}
+    \If{$R_1(x)$ accepts} \Return accept
+    \Else{} \Return reject
+    \EndIf
+  \EndFunction
+\end{algorithmic}
+
+A recognizer does not have to halt on every input, so the only thing to prove is that $R$ accepts $x$ if and only if $x \in L_1 \cap L_2$.
+
+\textbf{If $x \in L_1 \cap L_2$, then $R$ accepts $x$.}
+Since $x \in L_2$ and $D_2$ decides $L_2$, the first call $D_2(x)$ halts and accepts, so the first \textbf{if} does not fire.
+Since $x \in L_1$ and $R_1$ recognizes $L_1$, $R_1(x)$ halts and accepts.
+So $R$ reaches the last \textbf{if} and accepts.
+
+\textbf{If $x \notin L_1 \cap L_2$, then $R$ does not accept $x$.}
+There are two cases.
+\begin{itemize}
+  \item $x \notin L_2$. Then $D_2(x)$ halts and rejects, so $R$ rejects on the first \textbf{if}.
+  \item $x \in L_2$ but $x \notin L_1$. Then $D_2(x)$ accepts and $R$ goes on to run $R_1(x)$.
+  Since $x \notin L_1$, $R_1(x)$ does not accept: it either rejects, in which case $R$ rejects, or it loops, in which case $R$ loops.
+  Either way $R$ does not accept.
+\end{itemize}
+So $R$ accepts exactly the strings in $L_1 \cap L_2$, i.e., $R$ recognizes $L_1 \cap L_2$.
+
+(Calling $D_2$ first is not essential, since a recognizer may loop anyway, but it is the natural order: the decidable test is the one that is guaranteed to finish.)
+
+\qpage{Q2.3 Warm-up exercises (c)}
+
+The key observation is that \emph{every} Turing machine recognizes some language.
+By definition, $M$ recognizes $L$ if $M$ accepts exactly the strings in $L$.
+Given any Turing machine $M$, let $L(M) = \set{x : M(x) \text{ accepts}}$.
+This is a perfectly good language, and $M$ accepts exactly the strings in it, so $M$ recognizes $L(M)$.
+It does not matter whether $M$ loops on some inputs, since a recognizer is allowed to loop on strings outside its language.
+So
+\[
+  \Lrec = \set{\inner{M} : M \text{ is a Turing machine}},
+\]
+the set of all strings that are valid encodings of Turing machines.
+
+As in lecture, a valid encoding $\inner{M}$ is a string that lists the components of $M$: the finite set of states, the input and tape alphabets, the transition function as a finite table, and the start, accept, and reject states.
+Checking whether a given string has this form is a finite syntactic check, with no need to run $M$.
+
+\begin{algorithmic}[1]
+  \Require{A string $w$}
+  \Ensure{accept if $w \in \Lrec$, reject otherwise}
+  \Function{$D_{\textsc{Rec}}$}{$w$}
+    \State Try to parse $w$ as an encoding $(Q, \Sigma, \Gamma, \delta, q_0, q_{\text{acc}}, q_{\text{rej}})$ of a Turing machine
+    \State Check that $Q, \Sigma, \Gamma$ are finite lists, that $\delta$ assigns to each pair in $Q \times \Gamma$ exactly one triple in $Q \times \Gamma \times \set{L, R}$, and that $q_0, q_{\text{acc}}, q_{\text{rej}} \in Q$
+    \If{every check passes} \Return accept
+    \Else{} \Return reject
+    \EndIf
+  \EndFunction
+\end{algorithmic}
+
+\textbf{$D_{\textsc{Rec}}$ always halts.}
+Its input $w$ is a finite string, and every step is a finite check on that string: parsing it, counting entries, and comparing the entries of the transition table against the finite lists of states and symbols.
+$D_{\textsc{Rec}}$ never simulates the machine described by $w$.
+
+\textbf{Correctness.}
+\begin{itemize}
+  \item If $w \in \Lrec$, then $w = \inner{M}$ for some Turing machine $M$ (which recognizes $L(M)$), so $w$ is a valid encoding, every check passes, and $D_{\textsc{Rec}}$ accepts.
+  \item If $w \notin \Lrec$, then $w$ is not the encoding of any Turing machine: if it were, that machine would recognize its own language $L(M)$ and $w$ would be in $\Lrec$.
+  So some check fails and $D_{\textsc{Rec}}$ rejects.
+\end{itemize}
+Hence $D_{\textsc{Rec}}$ decides $\Lrec$, and $\Lrec$ is decidable.
+
+(Under the alternative convention where every string is treated as the encoding of some Turing machine, say a fixed default machine for malformed strings, $\Lrec$ is just $\Sigma^*$ and the decider is ``always accept.'')
+
+\qpage{Q3.1 Deciding Undecidability (a)}
+
+$\Leacc = \set{\inner{M} : M \text{ accepts } \varepsilon}$ is \textbf{undecidable}.
+I show $\Lacc \lT \Leacc$; since $\Lacc$ is undecidable (lecture), so is $\Leacc$.
+
+Let $O$ be an oracle that decides $\Leacc$: $O$ halts on every input, and $O(\inner{N})$ accepts if and only if $N(\varepsilon)$ accepts.
+The idea is to turn the question ``does $M$ accept $x$?'' into a question about a machine $M'$ that behaves on every input, in particular on $\varepsilon$, the way $M$ behaves on $x$.
+
+\begin{algorithmic}[1]
+  \Require{$(\inner{M}, x)$, where $M$ is a Turing machine and $x$ a string}
+  \Ensure{accept if $M(x)$ accepts, reject otherwise}
+  \Function{$M_{\text{ACC}}$}{$\inner{M}, x$}
+    \State Construct the code $\inner{M'}$ of the following machine $M'$:
+    \Statex \hspace{2em} \textbf{function} $M'(w)$: \Comment{$w$ is ignored}
+    \Statex \hspace{4em} Run $M(x)$ \Comment{$\inner{M}$ and $x$ are hard-coded into $M'$}
+    \Statex \hspace{4em} \textbf{if} $M(x)$ accepts \textbf{then return} accept \textbf{else return} reject
+    \State \Return $O(\inner{M'})$
+  \EndFunction
+\end{algorithmic}
+
+\textbf{$M_{\text{ACC}}$ always halts.}
+Constructing $\inner{M'}$ is string manipulation: $M_{\text{ACC}}$ writes a fixed template of code with the strings $\inner{M}$ and $x$ pasted in.
+It does not run $M$ or $M'$.
+Then it makes one call to $O$, which halts because $O$ decides $\Leacc$, and returns that answer.
+
+\textbf{Key property of $M'$.}
+For every input $w$, $M'(w)$ ignores $w$ and runs $M(x)$.
+If $M(x)$ accepts, $M'$ accepts.
+If $M(x)$ rejects, $M'$ rejects.
+If $M(x)$ loops, $M'$ never gets past the simulation, so $M'$ loops.
+In particular, for $w = \varepsilon$:
+\[
+  M'(\varepsilon) \text{ accepts} \iff M(x) \text{ accepts}.
+\]
+
+\textbf{Correctness.}
+By the definition of $\Lacc$, the key property, the definition of $\Leacc$, the fact that $O$ decides $\Leacc$, and the code of $M_{\text{ACC}}$,
+\begin{align*}
+  (\inner{M}, x) \in \Lacc &\Longrightarrow M(x) \text{ accepts} \\
+  &\Longrightarrow M'(\varepsilon) \text{ accepts} \\
+  &\Longrightarrow \inner{M'} \in \Leacc \\
+  &\Longrightarrow O(\inner{M'}) \text{ accepts} \\
+  &\Longrightarrow M_{\text{ACC}} \text{ accepts}, \\[0.5em]
+  (\inner{M}, x) \notin \Lacc &\Longrightarrow M(x) \text{ rejects or loops} \\
+  &\Longrightarrow M'(\varepsilon) \text{ rejects or loops, so does not accept} \\
+  &\Longrightarrow \inner{M'} \notin \Leacc \\
+  &\Longrightarrow O(\inner{M'}) \text{ rejects} \\
+  &\Longrightarrow M_{\text{ACC}} \text{ rejects}.
+\end{align*}
+So $M_{\text{ACC}}$ decides $\Lacc$ using an oracle for $\Leacc$, that is, $\Lacc \lT \Leacc$.
+If $\Leacc$ were decidable, we could replace $O$ by its decider and get a decider for $\Lacc$, which does not exist.
+Therefore $\Leacc$ is undecidable.
+
+\qpage{Q3.2 Deciding Undecidability (b)}
+
+$L = \set{(\inner{M_1}, \inner{M_2}) : \varepsilon \in L(M_1) \cup L(M_2)}$ is \textbf{undecidable}.
+Here $L(M_i)$ is the set of strings $M_i$ accepts, so $(\inner{M_1}, \inner{M_2}) \in L$ exactly when $M_1(\varepsilon)$ accepts or $M_2(\varepsilon)$ accepts (or both).
+I show $\Lacc \lT L$; since $\Lacc$ is undecidable, so is $L$.
+
+Let $O$ be an oracle that decides $L$: $O$ halts on every input, and $O(\inner{M_1}, \inner{M_2})$ accepts if and only if $\varepsilon \in L(M_1) \cup L(M_2)$.
+The trick is that nothing stops us from handing the oracle the same machine twice: $L(M') \cup L(M') = L(M')$, so the oracle then just tells us whether $M'$ accepts $\varepsilon$.
+
+\begin{algorithmic}[1]
+  \Require{$(\inner{M}, x)$, where $M$ is a Turing machine and $x$ a string}
+  \Ensure{accept if $M(x)$ accepts, reject otherwise}
+  \Function{$M_{\text{ACC}}$}{$\inner{M}, x$}
+    \State Construct the code $\inner{M'}$ of the following machine $M'$:
+    \Statex \hspace{2em} \textbf{function} $M'(w)$: \Comment{$w$ is ignored}
+    \Statex \hspace{4em} Run $M(x)$ \Comment{$\inner{M}$ and $x$ are hard-coded into $M'$}
+    \Statex \hspace{4em} \textbf{if} $M(x)$ accepts \textbf{then return} accept \textbf{else return} reject
+    \State \Return $O(\inner{M'}, \inner{M'})$
+  \EndFunction
+\end{algorithmic}
+
+\textbf{$M_{\text{ACC}}$ always halts.}
+Writing down $\inner{M'}$ is string manipulation (a fixed template with $\inner{M}$ and $x$ pasted in), and $M_{\text{ACC}}$ never runs $M$ or $M'$.
+It then makes one call to $O$, which halts because $O$ decides $L$, and returns that answer.
+
+\textbf{Key property of $M'$.}
+As in part (a), $M'(w)$ ignores $w$ and does what $M(x)$ does: it accepts if $M(x)$ accepts, rejects if $M(x)$ rejects, and loops if $M(x)$ loops.
+So $\varepsilon \in L(M')$ if and only if $M(x)$ accepts, and since $L(M') \cup L(M') = L(M')$,
+\[
+  \varepsilon \in L(M') \cup L(M') \iff M(x) \text{ accepts}.
+\]
+
+\textbf{Correctness.}
+By the definition of $\Lacc$, the key property, the definition of $L$, the fact that $O$ decides $L$, and the code of $M_{\text{ACC}}$,
+\begin{align*}
+  (\inner{M}, x) \in \Lacc &\Longrightarrow M(x) \text{ accepts} \\
+  &\Longrightarrow \varepsilon \in L(M') = L(M') \cup L(M') \\
+  &\Longrightarrow (\inner{M'}, \inner{M'}) \in L \\
+  &\Longrightarrow O(\inner{M'}, \inner{M'}) \text{ accepts} \\
+  &\Longrightarrow M_{\text{ACC}} \text{ accepts}, \\[0.5em]
+  (\inner{M}, x) \notin \Lacc &\Longrightarrow M(x) \text{ rejects or loops} \\
+  &\Longrightarrow M'(\varepsilon) \text{ does not accept, so } \varepsilon \notin L(M') \cup L(M') \\
+  &\Longrightarrow (\inner{M'}, \inner{M'}) \notin L \\
+  &\Longrightarrow O(\inner{M'}, \inner{M'}) \text{ rejects} \\
+  &\Longrightarrow M_{\text{ACC}} \text{ rejects}.
+\end{align*}
+So $M_{\text{ACC}}$ decides $\Lacc$ with an oracle for $L$, i.e., $\Lacc \lT L$.
+A decider for $L$ would therefore give a decider for $\Lacc$, which does not exist, so $L$ is undecidable.
+
+(One could also reduce from part (a): $\Leacc \lT L$ via the one-line machine that returns $O(\inner{M}, \inner{M})$.
+I reduced from $\Lacc$ directly so that the starting point is a language proved undecidable in lecture.)
+
+\qpage{Q4.1 HALTs (a)}
+
+$\Lbh$ is \textbf{decidable}.
+
+The point is that both parts of the condition are bounded by numbers we can read off the input.
+Let $\Sigma$ be the input alphabet of $M$ (it is listed in $\inner{M}$).
+There are only finitely many strings over $\Sigma$ of length at most $k$, namely $\sum_{\ell=0}^{k} \abs{\Sigma}^\ell$ of them, and for each one we only need to watch $M$ for $376$ steps.
+So we can just try them all.
+
+\begin{algorithmic}[1]
+  \Require{$(\inner{M}, k)$, where $M$ is a Turing machine and $k \ge 0$ an integer}
+  \Ensure{accept if some input $x$ with $\abs{x} \le k$ has $M(x)$ halting within $376$ steps, reject otherwise}
+  \Function{$D$}{$\inner{M}, k$}
+    \For{$\ell = 0, 1, \ldots, k$}
+      \For{each string $x \in \Sigma^\ell$ (in alphabetical order)}
+        \State Simulate $M$ on $x$ for at most $376$ steps
+        \If{$M$ entered its accept or reject state during these steps} \Return accept
+        \EndIf
+      \EndFor
+    \EndFor
+    \State \Return reject
+  \EndFunction
+\end{algorithmic}
+
+\textbf{$D$ always halts.}
+The two loops go over finitely many strings: $\abs{\Sigma}^\ell$ strings for each $\ell \le k$, and $k$ is a fixed number given in the input.
+Each simulation is cut off after at most $376$ steps of $M$, and simulating one step of $M$ (look up the transition for the current state and symbol, update the tape and head) takes finite time.
+So every iteration takes finitely many steps, there are finitely many iterations, and $D$ returns.
+$D$ never runs $M$ without a step bound.
+
+\textbf{Correctness.}
+The simulation is exact, so for each $x$, $M$ halts within the first $376$ simulated steps if and only if $M(x)$ really halts in at most $376$ steps.
+\begin{itemize}
+  \item If $(\inner{M}, k) \in \Lbh$, there is some $x^*$ with $\abs{x^*} \le k$ such that $M(x^*)$ halts in at most $376$ steps.
+  The loops eventually reach $x^*$ (unless $D$ has already accepted on an earlier string, which is also fine), the simulation of $M(x^*)$ sees $M$ halt, and $D$ accepts.
+  \item If $(\inner{M}, k) \notin \Lbh$, then for every $x$ with $\abs{x} \le k$, $M(x)$ does not halt within $376$ steps.
+  So no simulation sees a halting state, the \textbf{if} never fires, the loops run to completion, and $D$ rejects.
+\end{itemize}
+So $D$ decides $\Lbh$, and $\Lbh$ is decidable.
+
+(In $376$ steps $M$ can only read the first $376$ cells of its tape, so it would be enough to try strings of length at most $\min(k, 376)$, but the search above is already finite, so I did not bother.)
+
+\qpage{Q4.2 HALTs (b)}
+
+$\Llh$ is \textbf{undecidable}.
+I show $\Lh \lT \Llh$; since $\Lh$ is undecidable (lecture), so is $\Llh$.
+
+Unlike part (a), the step budget $\abs{w}$ is not fixed: it grows with the input.
+So a machine that takes the same number $T$ of steps on every input halts ``in time'' on every input of length at least $T$.
+
+Let $O$ be an oracle that decides $\Llh$: $O$ halts on every input, and $O(\inner{N})$ accepts if and only if there is some string $w$ such that $N(w)$ halts in at most $\abs{w}$ steps.
+
+\begin{algorithmic}[1]
+  \Require{$(\inner{M}, x)$, where $M$ is a Turing machine and $x$ a string}
+  \Ensure{accept if $M(x)$ halts, reject otherwise}
+  \Function{$M_{\text{HALT}}$}{$\inner{M}, x$}
+    \State Construct the code $\inner{M'}$ of the following machine $M'$:
+    \Statex \hspace{2em} \textbf{function} $M'(w)$: \Comment{$w$ is never read}
+    \Statex \hspace{4em} Run $M(x)$ \Comment{$\inner{M}$ and $x$ are hard-coded into $M'$}
+    \Statex \hspace{4em} \textbf{return} accept
+    \State \Return $O(\inner{M'})$
+  \EndFunction
+\end{algorithmic}
+
+\textbf{$M_{\text{HALT}}$ always halts.}
+Writing down $\inner{M'}$ is string manipulation, and $M_{\text{HALT}}$ never runs $M$ or $M'$.
+It then makes one call to $O$, which halts because $O$ decides $\Llh$, and returns that answer.
+
+\textbf{Key property of $M'$.}
+$M'$ never looks at its input, so its computation is literally the same on every input $w$.
+(It must not spend $\abs{w}$ steps erasing $w$ first, and it does not need to: $M'$ writes $x$ over the first $\abs{x}$ cells using a marked copy of $M$'s tape alphabet, and during the simulation treats every unmarked cell, leftover symbol of $w$ or blank, as a blank.)
+So if $M(x)$ halts, there is a number $T \ge 1$, not depending on $w$, such that $M'(w)$ halts after exactly $T$ steps for every $w$; and if $M(x)$ loops, then $M'(w)$ loops for every $w$.
+
+\textbf{Correctness.}
+Let $a$ be any symbol of the input alphabet.
+By the definition of $\Lh$, the key property, the definition of $\Llh$, the fact that $O$ decides $\Llh$, and the code of $M_{\text{HALT}}$,
+\begin{align*}
+  (\inner{M}, x) \in \Lh &\Longrightarrow M(x) \text{ halts} \\
+  &\Longrightarrow M' \text{ halts on every } w \text{ in exactly } T \text{ steps, so on } w = a^T \text{ in } T = \abs{w} \text{ steps} \\
+  &\Longrightarrow \inner{M'} \in \Llh \\
+  &\Longrightarrow O(\inner{M'}) \text{ accepts} \\
+  &\Longrightarrow M_{\text{HALT}} \text{ accepts}, \\[0.5em]
+  (\inner{M}, x) \notin \Lh &\Longrightarrow M(x) \text{ loops} \\
+  &\Longrightarrow M' \text{ loops on every } w\text{, so no } w \text{ has } M' \text{ halting within } \abs{w} \text{ steps} \\
+  &\Longrightarrow \inner{M'} \notin \Llh \\
+  &\Longrightarrow O(\inner{M'}) \text{ rejects} \\
+  &\Longrightarrow M_{\text{HALT}} \text{ rejects}.
+\end{align*}
+So $M_{\text{HALT}}$ decides $\Lh$ using an oracle for $\Llh$, i.e., $\Lh \lT \Llh$.
+A decider for $\Llh$ would give a decider for $\Lh$, which does not exist, so $\Llh$ is undecidable.
+
+\qpage{Q5.1 Recognizing Unrecognizability (a)}
+
+$\Lloops$ is \textbf{unrecognizable}.
+
+The reason is that $\Lloops$ is essentially the complement of $\Lh$, and $\Lh$ is recognizable but not decidable.
+We saw in lecture that if both a language and its complement are recognizable, then the language is decidable.
+I include the argument below, since it is the whole proof.
+
+\textbf{Setup.}
+Let $V$ be the set of strings that are valid encodings of a pair $(\inner{M}, x)$ with $M$ a Turing machine and $x$ a string.
+$V$ is decidable by a syntactic check, as in Q2(c).
+For every pair in $V$, $M(x)$ either halts or loops, and not both, so
+\[
+  \Lh \cup \Lloops = V \qquad\text{and}\qquad \Lh \cap \Lloops = \emptyset .
+\]
+Also, $\Lh$ is recognizable (lecture): the universal machine $U(\inner{M}, x)$ runs $M$ on $x$ and accepts as soon as it halts, so $U$ accepts exactly the pairs in $\Lh$.
+
+\textbf{Suppose for contradiction that $\Lloops$ is recognizable}, and let $R$ be a machine that accepts exactly the strings in $\Lloops$.
+Consider the following machine.
+
+\begin{algorithmic}[1]
+  \Require{A string $w$}
+  \Ensure{accept if $w \in \Lh$, reject otherwise}
+  \Function{$D$}{$w$}
+    \If{$w \notin V$} \Return reject \Comment{not a valid pair; decidable check}
+    \EndIf
+    \Loop
+      \State Run $U(w)$ for one more step; \textbf{if} $U$ has accepted \textbf{then return} accept
+      \State Run $R(w)$ for one more step; \textbf{if} $R$ has accepted \textbf{then return} reject
+    \EndLoop
+  \EndFunction
+\end{algorithmic}
+(Both simulations keep their own tape and state between iterations, so this alternates steps of $U(w)$ and $R(w)$; if one of them halts without accepting, $D$ just keeps stepping the other one.)
+
+\textbf{$D$ always halts.}
+If $w \notin V$, $D$ rejects right away.
+If $w \in V$, then $w \in \Lh$ or $w \in \Lloops$.
+In the first case $U(w)$ accepts after some finite number $t$ of steps, so $D$ returns by the end of iteration $t$.
+In the second case $R(w)$ accepts after some finite number of steps, so again $D$ returns.
+Either way the loop stops.
+
+\textbf{Correctness.}
+\begin{itemize}
+  \item If $w \in \Lh$, then $w \in V$, $U(w)$ accepts, and $R(w)$ never accepts (because $w \notin \Lloops$ and $R$ recognizes $\Lloops$).
+  So the only way out of the loop is ``return accept,'' and $D$ accepts.
+  \item If $w \notin \Lh$, then either $w \notin V$ and $D$ rejects on line 1, or $w \in V$ with $M(x)$ looping, i.e., $w \in \Lloops$.
+  Then $R(w)$ accepts and $U(w)$ never accepts, so $D$ rejects.
+\end{itemize}
+So $D$ decides $\Lh$.
+But $\Lh$ is undecidable (lecture).
+This contradiction shows that no such $R$ exists: $\Lloops$ is unrecognizable.
+
+\qpage{Q5.2 Recognizing Unrecognizability (b)}
+
+$\LSp$ is \textbf{recognizable} (for every fixed finite set $S$).
+
+Write $S = \set{s_1, s_2, \ldots, s_n}$; since $S$ is fixed and finite, this list can be hard-coded into the recognizer.
+Note $\inner{M} \in \LSp$ if and only if $M$ accepts every one of $s_1, \ldots, s_n$.
+The recognizer just runs $M$ on each $s_i$ in turn.
+It may get stuck forever on some $s_i$, but that only happens when $M$ does not accept $s_i$, so it is allowed.
+
+\begin{algorithmic}[1]
+  \Require{A string $w$}
+  \Ensure{accept if $w = \inner{M}$ with $L(M) \supseteq S$; otherwise reject or loop}
+  \Function{$R$}{$w$}
+    \If{$w$ is not a valid encoding $\inner{M}$ of a Turing machine} \Return reject
+    \EndIf
+    \For{$i = 1, 2, \ldots, n$}
+      \State Run $M(s_i)$ \Comment{this may loop, which is allowed for a recognizer}
+      \If{$M(s_i)$ rejects} \Return reject
+      \EndIf
+    \EndFor
+    \State \Return accept \Comment{every $s_i$ was accepted}
+  \EndFunction
+\end{algorithmic}
+
+A recognizer does not have to halt on every input, so what has to be shown is that $R$ accepts $w$ if and only if $w \in \LSp$.
+
+\textbf{If $w \in \LSp$, then $R$ accepts $w$.}
+Then $w = \inner{M}$ for a Turing machine $M$ with $L(M) \supseteq S$, so the validity check passes, and $M$ accepts every $s_i$.
+So in iteration $i$ the simulation of $M(s_i)$ halts, in the accept state, and the \textbf{if} does not fire.
+After all $n$ iterations, $R$ reaches the last line and accepts.
+(If $S = \emptyset$, the loop is empty and $R$ accepts every valid $\inner{M}$, which is right, since every $L(M) \supseteq \emptyset$.)
+
+\textbf{If $w \notin \LSp$, then $R$ does not accept $w$.}
+If $w$ is not a valid encoding, $R$ rejects on line 1.
+Otherwise $w = \inner{M}$ and $L(M) \not\supseteq S$, so there is some $s_j \in S$ that $M$ does not accept.
+Take the smallest such $j$.
+For $i < j$, $M(s_i)$ accepts, so iterations $1, \ldots, j-1$ finish without returning.
+In iteration $j$, $M(s_j)$ either rejects, in which case $R$ rejects, or loops, in which case $R$ loops inside the simulation and never reaches the accept line.
+Either way $R$ does not accept.
+
+So $R$ accepts exactly the strings in $\LSp$, i.e., $R$ recognizes $\LSp$.
+
+(The order in which the $s_i$ are tried does not matter, and running the $n$ simulations in parallel would also work.
+Running them one after another is simpler and is enough, because the only inputs where $R$ gets stuck are inputs it is supposed to not accept anyway.)
+
+\qpage{Q6 Lagging Barber}
+
+Recall $\Lb = \set{\inner{M} : M(\inner{M}) \text{ does not accept}}$, which is undecidable (lecture).
+I show $\Lb \lT \Llag$, so $\Llag$ is undecidable as well.
+
+Let $O$ be an oracle that decides $\Llag$: $O$ halts on every input, and $O(\inner{M_1}, \inner{M_2})$ accepts if and only if for every $x \in \Sigma^*$, $M_2(x)$ accepts implies $M_1(x)$ loops.
+
+\textbf{Idea.}
+Choose $M_1$ to be a machine that \emph{never} loops.
+Then ``$M_2(x)$ accepts $\Rightarrow$ $M_1(x)$ loops'' can only hold when $M_2(x)$ does not accept, so $M_1$ lags behind $M_2$ exactly when $M_2$ accepts nothing.
+Now choose $M_2$ to accept everything if $M(\inner{M})$ accepts, and nothing otherwise; then the oracle answers exactly the Barber question.
+
+\begin{algorithmic}[1]
+  \Require{$\inner{M}$, where $M$ is a Turing machine}
+  \Ensure{accept if $M(\inner{M})$ does not accept, reject otherwise}
+  \Function{$\Mb$}{$\inner{M}$}
+    \State Let $M_{\text{yes}}$ be the machine that accepts every input immediately (fixed code)
+    \State Construct the code $\inner{M'}$ of the following machine $M'$:
+    \Statex \hspace{2em} \textbf{function} $M'(w)$: \Comment{$w$ is ignored}
+    \Statex \hspace{4em} Run $M(\inner{M})$ \Comment{$\inner{M}$ is hard-coded into $M'$}
+    \Statex \hspace{4em} \textbf{if} $M(\inner{M})$ accepts \textbf{then return} accept \textbf{else return} reject
+    \State \Return $O(\inner{M_{\text{yes}}}, \inner{M'})$ \Comment{$M_1 = M_{\text{yes}}$, $M_2 = M'$}
+  \EndFunction
+\end{algorithmic}
+
+\textbf{$\Mb$ always halts.}
+$\inner{M_{\text{yes}}}$ is a fixed string, and writing down $\inner{M'}$ is string manipulation with $\inner{M}$ pasted into a template.
+$\Mb$ never runs $M$, $M'$, or $M_{\text{yes}}$.
+It makes one call to $O$, which halts because $O$ decides $\Llag$, and returns that answer.
+
+\textbf{Key properties.}
+$M_{\text{yes}}(x)$ halts on every $x$, so $M_{\text{yes}}$ never loops.
+$M'(w)$ ignores $w$ and does what $M(\inner{M})$ does, so either $M'$ accepts every string (if $M(\inner{M})$ accepts) or $M'$ accepts no string (if $M(\inner{M})$ rejects or loops).
+
+\textbf{Correctness.}
+By the definition of $\Lb$, the key properties, the definition of lagging, the fact that $O$ decides $\Llag$, and the code of $\Mb$,
+\begin{align*}
+  \inner{M} \in \Lb &\Longrightarrow M(\inner{M}) \text{ does not accept} \\
+  &\Longrightarrow M'(x) \text{ does not accept, for every } x \in \Sigma^* \\
+  &\Longrightarrow \text{``$M'(x)$ accepts $\Rightarrow$ $M_{\text{yes}}(x)$ loops'' holds vacuously for every } x \\
+  &\Longrightarrow M_{\text{yes}} \text{ lags behind } M'\text{, i.e., } (\inner{M_{\text{yes}}}, \inner{M'}) \in \Llag \\
+  &\Longrightarrow O(\inner{M_{\text{yes}}}, \inner{M'}) \text{ accepts} \\
+  &\Longrightarrow \Mb \text{ accepts}, \\[0.5em]
+  \inner{M} \notin \Lb &\Longrightarrow M(\inner{M}) \text{ accepts} \\
+  &\Longrightarrow M'(\varepsilon) \text{ accepts, but } M_{\text{yes}}(\varepsilon) \text{ halts rather than loops} \\
+  &\Longrightarrow \text{the lag condition fails at } x = \varepsilon\text{, i.e., } (\inner{M_{\text{yes}}}, \inner{M'}) \notin \Llag \\
+  &\Longrightarrow O(\inner{M_{\text{yes}}}, \inner{M'}) \text{ rejects} \\
+  &\Longrightarrow \Mb \text{ rejects}.
+\end{align*}
+So $\Mb$ decides $\Lb$ using an oracle for $\Llag$, i.e., $\Lb \lT \Llag$.
+If $\Llag$ were decidable, replacing $O$ by its decider would give a decider for $\Lb$, which does not exist.
+Therefore $\Llag$ is undecidable.
+
+\qpage{Q7.1 Infinite machines, infinite inputs! (a)}
+
+The flaw is that the test for $M_1$ never finishes if $M_1$ does not halt on any input, so the procedure never gets to $M_2$.
+
+Dovetailing over the inputs $s_1, s_2, s_3, \ldots$ of $M_1$ does fix one problem: no single looping computation can block the others, since every $M_1(s_j)$ keeps getting steps.
+And if $M_1$ halts on some $s_j$, the dovetailing will eventually see that, because after enough rounds $M_1(s_j)$ has been given as many steps as it needs.
+But there are infinitely many inputs.
+If $M_1$ loops on every one of them, then no round ever produces a halt, and the dovetailing just keeps starting new computations $M_1(s_4), M_1(s_5), \ldots$ forever.
+There is no point at which Professor $\Upsilon$ can declare ``$M_1$ is done, move on to $M_2$,'' because ``$M_1$ halts on no input'' is not something that can be observed in finitely many steps.
+
+So take a collection in which $M_1$ loops on everything (say $M_1$ immediately enters an infinite loop), while $M_2$ halts on $s_1$ in one step.
+The correct answer is ``yes, some machine halts on some input,'' but Professor $\Upsilon$'s procedure spends forever on $M_1$ and never runs a single step of $M_2$.
+Dovetailing has to cover \emph{both} infinite dimensions, machines and inputs, at the same time; dovetailing over one of them and then iterating over the other does not work.
+
+(There is a smaller issue in the phrasing as well: Professor $\Upsilon$ talks about testing whether $M_1$ ``halts on all its possible inputs,'' but the goal only needs some machine to halt on some input, which is what the dovetailing can detect.
+Halting on \emph{all} inputs is not something any finite amount of simulation can confirm either.)
+
+\qpage{Q7.2 Infinite machines, infinite inputs! (b)}
+
+The flaw is the same one, with the roles of machines and inputs swapped: the test for $s_1$ never finishes if no machine halts on $s_1$, so the procedure never gets to $s_2$.
+
+Dovetailing over the machines $M_1, M_2, M_3, \ldots$ on the fixed input $s_1$ makes sure that every $M_i(s_1)$ keeps getting steps, so if some $M_i$ halts on $s_1$, that will eventually be seen.
+But there are infinitely many machines.
+If every $M_i$ loops on $s_1$, then no round ever produces a halt, and Dr.\ Epsiwrong's procedure keeps adding $M_4(s_1), M_5(s_1), \ldots$ to the pile forever.
+The event ``no machine halts on $s_1$'' cannot be observed after finitely many steps, so there is never a moment to say ``done with $s_1$, move on to $s_2$.''
+
+Concretely, take a collection in which every $M_i$ loops on $s_1$ (say each $M_i$ loops whenever its input is $s_1$), while $M_1$ halts on $s_2$ in one step.
+The correct answer is ``yes,'' but the procedure spends forever on $s_1$ and never runs a single step on $s_2$.
+
+So both colleagues made the same mistake.
+Each of them dovetails along one infinite list and then tries to iterate over the other infinite list, and the iteration never advances past its first element.
+The fix, in part (c), is to dovetail over machines and inputs simultaneously, so that every pair $(M_i, s_j)$ gets started after finitely many rounds and then gets a step in every round after that.
+
+\qpage{Q7.3 Infinite machines, infinite inputs! (c)}
+
+\textbf{Setup.}
+Let $s_1, s_2, s_3, \ldots$ be the standard enumeration of $\Sigma^*$ (by length, and alphabetically within each length); given $j$, the string $s_j$ can be computed.
+I assume the archive gives us access to the machines in order, i.e., given $i$ we can look up the code $\inner{M_i}$ (for example, the encodings are stored one after another on a read-only tape).
+Without some such access there is nothing to simulate.
+The machine below ignores its own input.
+
+\begin{algorithmic}[1]
+  \Require{Any string (ignored)}
+  \Ensure{accept if some $M_i$ halts on some $s_j$; loop otherwise}
+  \Function{$A$}{}
+    \For{$n = 1, 2, 3, \ldots$} \Comment{round $n$}
+      \For{each pair $(i, j)$ with $1 \le i \le n$ and $1 \le j \le n$}
+        \If{the pair $(i,j)$ has not been started yet} look up $\inner{M_i}$ and $s_j$ and set up the initial configuration of $M_i$ on $s_j$
+        \EndIf
+        \State Simulate one more step of $M_i(s_j)$, continuing from its saved configuration
+        \If{$M_i(s_j)$ has halted (accept or reject)} \Return accept
+        \EndIf
+      \EndFor
+    \EndFor
+  \EndFunction
+\end{algorithmic}
+At any time the machine stores the configurations of the finitely many pairs started so far (at most $n^2$ of them during round $n$), so each round is a finite amount of work.
+
+\textbf{When a pair gets its steps.}
+The pair $(i, j)$ first appears in round $\max(i, j)$ and gets exactly one step in that round and in every later round.
+So by the end of round $\max(i, j) + t - 1$, the simulation of $M_i(s_j)$ has been run for exactly $t$ steps (unless $A$ accepted earlier).
+
+\textbf{Each round finishes.}
+Round $n$ handles $n^2$ pairs, and for each one it does one lookup (only the first time), one simulated step, and one check.
+All of these take finite time, so round $n$ ends after finitely many steps and round $n+1$ begins, unless $A$ returns during round $n$.
+
+\textbf{Correctness.}
+\begin{itemize}
+  \item Suppose some machine in the list halts on some input: $M_i(s_j)$ halts, say after $t$ steps.
+  Since every round finishes, $A$ reaches round $\max(i,j) + t - 1$ unless it has accepted before that.
+  By then $M_i(s_j)$ has been simulated for $t$ steps, so the simulation has reached a halting state, and the check after that step makes $A$ accept.
+  So $A$ accepts.
+  \item Suppose no machine in the list halts on any input.
+  Then no simulated computation $M_i(s_j)$ ever reaches a halting state, so the check never fires and ``return accept'' is never executed.
+  Every round finishes and the next one starts, so $A$ runs through rounds $1, 2, 3, \ldots$ forever.
+  So $A$ loops.
+\end{itemize}
+Hence $A$ accepts if and only if some $M_i$ halts on some $s_j$, and loops otherwise, as required.
+
+(Note that $A$ is a recognizer, not a decider: it never answers ``no.''
+That is all the problem asks for.)
+
+\qpage{Q8.1 (Optional extra credit) (a)}
+
+\textbf{True.} For every undecidable $L_1$ and finite $L_2$, $L_1 \cup L_2$ is undecidable.
+
+The idea: adding finitely many strings cannot make an undecidable language decidable, because a decider for the union, together with a finite table of answers for those finitely many strings, would decide $L_1$.
+I write this as $L_1 \lT L_1 \cup L_2$.
+
+Let $L_2 = \set{y_1, \ldots, y_m}$, and let $T = L_1 \cap L_2$.
+$T$ is a subset of a finite set, so $T$ is finite, and a finite language is decided by a machine that hard-codes its members.
+We do not need to know which $y_i$ are in $T$; it is enough that the finite list exists, so the machine $D_T$ deciding $T$ exists (this is the same kind of argument as for $\Lsmh$ in HW6).
+Let $O$ be an oracle that decides $L_1 \cup L_2$.
+
+\begin{algorithmic}[1]
+  \Require{A string $x$}
+  \Ensure{accept if $x \in L_1$, reject otherwise}
+  \Function{$M_1$}{$x$}
+    \If{$x \in \set{y_1, \ldots, y_m}$} \Return $D_T(x)$ \Comment{finite table lookup}
+    \Else{} \Return $O(x)$
+    \EndIf
+  \EndFunction
+\end{algorithmic}
+
+\textbf{$M_1$ always halts.}
+Comparing $x$ against the $m$ fixed strings is finite work, $D_T$ halts on every input because it is a decider for a finite language, and $O$ halts on every input because it decides $L_1 \cup L_2$.
+
+\textbf{Correctness.}
+\begin{itemize}
+  \item If $x \in L_2$: then $x \in L_1 \iff x \in L_1 \cap L_2 = T$, and $D_T$ decides $T$, so $M_1(x)$ accepts if $x \in L_1$ and rejects otherwise.
+  \item If $x \notin L_2$: then $x \in L_1 \iff x \in L_1 \cup L_2$ (a string outside $L_2$ is in the union exactly when it is in $L_1$), and $O$ decides $L_1 \cup L_2$, so again $M_1(x)$ accepts if $x \in L_1$ and rejects otherwise.
+\end{itemize}
+So $M_1$ decides $L_1$ with an oracle for $L_1 \cup L_2$, i.e., $L_1 \lT L_1 \cup L_2$.
+If $L_1 \cup L_2$ were decidable, replacing $O$ by its decider would give a decider for $L_1$, contradicting the assumption that $L_1$ is undecidable.
+Hence $L_1 \cup L_2$ is undecidable.
+
+\qpage{Q8.2 (Optional extra credit) (b)}
+
+\textbf{False.} An undecidable language can be made decidable by taking a union with a decidable one.
+
+Counterexample: $L_1 = \Lh$ and $L_2 = \Sigma^*$.
+\begin{itemize}
+  \item $L_1 = \Lh$ is undecidable (lecture).
+  \item $L_2 = \Sigma^*$ is decidable: the machine that accepts every input immediately halts on every input and accepts exactly the strings in $\Sigma^*$.
+  \item $L_1 \cup L_2 = \Lh \cup \Sigma^* = \Sigma^*$, which is decidable by the same machine.
+\end{itemize}
+So here $L_1$ is undecidable, $L_2$ is decidable, and $L_1 \cup L_2$ is decidable.
+This disproves the statement.
+
+This does not contradict part (a).
+The argument there used that $L_2$ is finite, so that the strings where the union does not determine $L_1$ could be handled by a finite table.
+When $L_2$ is infinite, the union may hide infinitely much information about $L_1$, as it does here: $\Sigma^*$ swallows $\Lh$ completely.
+
+\end{document}
