@@ -64,8 +64,9 @@ I did not collaborate with anyone on this homework.
 \[
   \LP = \set{(G, s, t, k) :
   \begin{array}{l}
-    G = (V, E) \text{ is a graph, } s, t \in V, \ k \text{ is a nonnegative integer, and } G \text{ has}\\
-    \text{a path from } s \text{ to } t \text{ with no repeated vertex and at least } k \text{ edges}
+    G = (V, E) \text{ is a graph, } s, t \in V, \ k \text{ is a nonnegative integer,}\\
+    \text{and } G \text{ has a path from } s \text{ to } t \text{ with no repeated vertex}\\
+    \text{and at least } k \text{ edges}
   \end{array}}.
 \]
 
@@ -260,7 +261,7 @@ The input $(G, k)$ has size at least $n + m$ (the graph has to list its vertices
 \begin{itemize}
   \item Initializing $G'$ with $V' = V$ and $E' = E$ copies the graph, which takes $O(n + m)$ time.
   \item The \textbf{for} loop runs once per edge of $G$, i.e., exactly $m$ times.
-  (It iterates over the original edge set $E$, not over $E'$, so the edges added inside the loop do not create more iterations.)
+  (It iterates over the original edge set $E$, not over $E'$, so the new edges do not create more iterations.)
   Each iteration creates one new vertex and adds two new edges, which is a constant number of insertions, $O(1)$ time each with any reasonable representation (and certainly at most polynomial in $n + m$).
   So the loop takes $O(m)$ time.
   \item Returning $(G', k)$ writes out the new graph and copies $k$.
@@ -326,7 +327,7 @@ Since the edge was arbitrary, $S$ is a vertex cover of $G$.
 
 So $G$ has a vertex cover of size at most $k$, i.e., $(G, k) \in \VC$.
 
-Together with parts (c) and (d), $f$ is a polynomial-time mapping reduction, so $\VC \lp \HH$ and $\HH$ is $\NP$-hard; with part (a), $\HH$ is $\NP$-complete.
+Together with parts (c) and (d), this shows that $f$ is a polynomial-time mapping reduction, so $\VC \lp \HH$ and $\HH$ is $\NP$-hard. With part (a), $\HH$ is $\NP$-complete.
 
 \qpage{Q5.1 Understanding $\P$, $\NP$, and polynomial-time mapping reductions (a)}
 
