@@ -1,0 +1,750 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{fancyhdr}
+\usepackage{enumerate}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+
+\newcommand{\hwnum}{8}
+
+% page header, same as the posted solutions
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{EECS 376: Foundations of Computer Science\\University of Michigan, Fall 2026}
+\rhead{\vspace{\baselineskip}Solutions to Homework \hwnum}
+\cfoot{\thepage}
+\setlength{\headheight}{28pt}
+
+% pseudocode labels
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+% notation
+\newcommand{\set}[1]{\left\{#1\right\}}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\inner}[1]{\langle #1 \rangle}
+\newcommand{\algo}[1]{\textsc{#1}}
+\newcommand{\lT}{\leq_T}
+\newcommand{\lp}{\leq_p}
+\newcommand{\cproblem}[1]{\textsc{#1}}
+\renewcommand{\P}{\textsf{P}}
+\newcommand{\NP}{\textsf{NP}}
+\newcommand{\coNP}{\textsf{coNP}}
+\newcommand{\Lacc}{L_{\text{ACC}}}
+\newcommand{\HalfClique}{\textsf{HALF-CLIQUE}}
+\newcommand{\BigClique}{\textsf{BIG-CLIQUE}}
+\newcommand{\HH}{\cproblem{Haunted-House}}
+\newcommand{\VC}{\cproblem{Vertex-Cover}}
+\newcommand{\TSP}{\cproblem{TSP}}
+\newcommand{\HC}{\cproblem{Ham-Cycle}}
+\newcommand{\SSUM}{\cproblem{Subset-Sum}}
+\newcommand{\TSAT}{\cproblem{3SAT}}
+\newcommand{\LP}{\cproblem{Long-Path}}
+\newcommand{\Candy}{\cproblem{Candy}}
+
+% one part per page for Gradescope
+\newcommand{\qpage}[1]{\clearpage\noindent\textbf{\large #1}\par\medskip}
+
+\begin{document}
+
+\noindent\textbf{\large Q0 Before you start; before you submit}\par\medskip
+
+I read Handout 6 on $\NP$-hardness proofs before starting, and the reductions below follow it: describe the reduction, show that it runs in polynomial time, and prove the two directions of correctness separately, naming the solution I start from in each direction.
+I did not collaborate with anyone on this homework.
+
+\qpage{Q1 Self assessment}
+
+% TODO(me): fill in from my graded midterm and the posted midterm solutions.
+\textbf{[TO FILL IN: copy or screenshot of my midterm answer for the chosen part, then a few sentences on what was deficient and how to fix it.]}
+
+\qpage{Q2.1 Defining languages (a)}
+
+\[
+  \LP = \set{(G, s, t, k) :
+  \begin{array}{l}
+    G = (V, E) \text{ is a graph, } s, t \in V, \ k \text{ is a nonnegative integer, and } G \text{ has}\\
+    \text{a path from } s \text{ to } t \text{ with no repeated vertex and at least } k \text{ edges}
+  \end{array}}.
+\]
+
+The optimization problem asks for the longest cycle-free path; the language adds a threshold $k$ and asks the yes/no question ``is there a cycle-free path from $s$ to $t$ of length at least $k$?''
+A path with no cycle is one that does not repeat a vertex.
+Since we are maximizing, the threshold is a lower bound (``at least $k$''): the length of the longest such path is the largest $k$ for which $(G, s, t, k) \in \LP$.
+If $G$ is weighted, ``at least $k$ edges'' is replaced by ``total weight at least $k$.''
+
+\qpage{Q2.2 Defining languages (b)}
+
+\[
+  \Candy = \set{(C, s, k) :
+  \begin{array}{l}
+    C = \set{c_1, \ldots, c_n} \text{ is a set of positive integers, } s \text{ and } k \text{ are nonnegative}\\
+    \text{integers, and there is a subset } I \subseteq C \text{ with } \abs{I} \leq k \text{ and } \sum_{c \in I} c \geq s
+  \end{array}}.
+\]
+
+In words: $(C, s, k)$ is in the language if some choice of at most $k$ candy pieces has at least $s$ grams of sugar in total.
+Since we are minimizing the number of pieces, the threshold is an upper bound (``at most $k$''): the minimum number of pieces needed is the smallest $k$ for which $(C, s, k) \in \Candy$.
+
+\qpage{Q3.1 $\Upsilon$'s Scary P-NP Warmup (a)}
+
+$V$ does not run in polynomial time, so it is not an \emph{efficient} verifier.
+
+A polynomial-time verifier for $\Lacc$ must run in time polynomial in the size of the instance $(\inner{M}, x)$, and the certificates it needs must have size polynomial in the size of the instance as well.
+$V$ fails this for two reasons.
+
+\textbf{The running time is exponential in the size of $c$.}
+The certificate $c$ is an integer written in binary, so it takes only about $\log_2 c$ bits to write down, but $V$ simulates $M$ for $c$ steps.
+A certificate of length $\ell$ bits can be as large as $2^\ell - 1$, so $V$ may take about $2^\ell$ steps: exponential, not polynomial, in the length of its input.
+Even if we only allow certificates of length polynomial in $\abs{(\inner{M}, x)}$, the simulation can still take time exponential in the size of the instance.
+
+\textbf{The certificate that is needed is not bounded by any polynomial.}
+For $(\inner{M}, x) \in \Lacc$, the only certificates that make $V$ accept are the integers $c \geq T$, where $T$ is the number of steps $M$ takes to accept $x$.
+$T$ has nothing to do with the size of $(\inner{M}, x)$: a small machine can run for an enormous number of steps on a short input before accepting.
+So there is no polynomial $p$ such that every ``yes'' instance has an accepting certificate of length at most $p(\abs{(\inner{M}, x)})$, and no polynomial bound on the time $V$ needs to confirm it.
+
+Note that $V$ does satisfy the correctness condition: $M$ accepts $x$ if and only if there is some $c$ such that $M$ accepts $x$ within $c$ steps.
+The only problem is efficiency.
+(No fix is possible: every language in $\NP$ is decidable, by Q5(b), and $\Lacc$ is undecidable, so $\Lacc$ has no polynomial-time verifier at all.)
+
+\qpage{Q3.2 $\Upsilon$'s Scary P-NP Warmup (b)}
+
+The certificate is the clique itself, given as a list of vertices.
+
+\begin{algorithmic}[1]
+  \Require{A graph $G = (V, E)$ and a certificate $c$}
+  \Ensure{accept if $c$ is a clique of $G$ with at least $\abs{V}/2$ vertices, reject otherwise}
+  \Function{$V_{\text{HC}}$}{$\inner{G}, c$}
+    \If{$c$ is not a list of distinct vertices of $V$} \Return reject
+    \EndIf
+    \State Let $S$ be the set of vertices listed in $c$
+    \If{$\abs{S} < \abs{V}/2$} \Return reject
+    \EndIf
+    \For{each pair of distinct vertices $u, v \in S$}
+      \If{$(u, v) \notin E$} \Return reject
+      \EndIf
+    \EndFor
+    \State \Return accept
+  \EndFunction
+\end{algorithmic}
+
+\textbf{Efficiency.}
+Let $n = \abs{V}$.
+A certificate that passes the first check lists at most $n$ vertices, so its size is polynomial in the size of $\inner{G}$ (a longer $c$ can be rejected as soon as it is seen to have more than $n$ entries).
+Checking that the entries are distinct vertices of $V$ takes $O(n^2)$ comparisons, comparing $\abs{S}$ with $n/2$ takes $O(n)$ time, and the loop looks at $\binom{\abs{S}}{2} = O(n^2)$ pairs, each needing one lookup in $E$, which takes at most $O(\abs{E})$ time.
+So $V_{\text{HC}}$ runs in $O(n^2 \abs{E})$ time, which is polynomial in the size of $\inner{G}$.
+
+\textbf{Correctness.} I show $\inner{G} \in \HalfClique \iff \exists c$ such that $V_{\text{HC}}(\inner{G}, c)$ accepts.
+
+($\Longrightarrow$) Suppose $\inner{G} \in \HalfClique$.
+Then $G$ has a clique $K \subseteq V$ with $\abs{K} \geq \abs{V}/2$.
+Let $c$ be the list of the vertices of $K$, each written once.
+Then $c$ is a list of distinct vertices of $V$, $\abs{S} = \abs{K} \geq \abs{V}/2$, and every two distinct vertices of $K$ are adjacent because $K$ is a clique, so no check fails and $V_{\text{HC}}(\inner{G}, c)$ accepts.
+
+($\Longleftarrow$) Suppose $V_{\text{HC}}(\inner{G}, c)$ accepts for some $c$.
+Then every check passed: $c$ lists a set $S \subseteq V$, $\abs{S} \geq \abs{V}/2$, and every pair of distinct vertices of $S$ is joined by an edge of $E$.
+So $S$ is a clique of $G$ of size at least $\abs{V}/2$, and $\inner{G} \in \HalfClique$.
+
+Equivalently, if $\inner{G} \notin \HalfClique$, then no $c$ can pass all checks, so $V_{\text{HC}}$ rejects for every certificate.
+Hence $V_{\text{HC}}$ is an efficient verifier for $\HalfClique$, and $\HalfClique \in \NP$.
+
+\qpage{Q3.3 $\Upsilon$'s Scary P-NP Warmup (c)}
+
+A set of $\abs{V} - 1$ vertices is $V$ with exactly one vertex removed.
+So there are only $\abs{V}$ candidates for the clique, and we can try them all.
+
+\begin{algorithmic}[1]
+  \Require{A graph $G = (V, E)$}
+  \Ensure{accept if $G$ has a clique of size $\abs{V} - 1$, reject otherwise}
+  \Function{$D_{\text{BC}}$}{$\inner{G}$}
+    \For{each vertex $w \in V$}
+      \State $ok \gets$ true
+      \For{each pair of distinct vertices $u, v \in V \setminus \set{w}$}
+        \If{$(u, v) \notin E$} $ok \gets$ false
+        \EndIf
+      \EndFor
+      \If{$ok$} \Return accept
+      \EndIf
+    \EndFor
+    \State \Return reject
+  \EndFunction
+\end{algorithmic}
+
+\textbf{Correctness.}
+The subsets of $V$ of size exactly $\abs{V} - 1$ are exactly the sets $V \setminus \set{w}$ for $w \in V$.
+In the iteration for $w$, the variable $ok$ is true at the end of the inner loop if and only if every pair of distinct vertices of $V \setminus \set{w}$ is joined by an edge, i.e., if and only if $V \setminus \set{w}$ is a clique.
+
+\begin{itemize}
+  \item If $\inner{G} \in \BigClique$, then $G$ has a clique $K$ with $\abs{K} = \abs{V} - 1$, so $K = V \setminus \set{w}$ for some $w \in V$.
+  The outer loop either accepts before reaching $w$, or reaches $w$, finds $ok$ true, and accepts.
+  Either way $D_{\text{BC}}$ accepts.
+  \item If $\inner{G} \notin \BigClique$, then no set $V \setminus \set{w}$ is a clique, so in every iteration some pair is not adjacent, $ok$ becomes false, and the iteration does not accept.
+  After the outer loop ends, $D_{\text{BC}}$ rejects.
+\end{itemize}
+(If the definition is read as ``at least $\abs{V} - 1$,'' nothing changes: a clique of size $\abs{V}$ contains a clique of size $\abs{V} - 1$, since every subset of a clique is a clique.)
+
+\textbf{Runtime.}
+Let $n = \abs{V}$.
+The outer loop runs at most $n$ times.
+Each iteration looks at $\binom{n-1}{2} = O(n^2)$ pairs, and for each pair does one lookup in $E$, which takes $O(1)$ time with an adjacency matrix and at most $O(\abs{E}) = O(n^2)$ time with an edge list.
+So the total time is $O(n \cdot n^2 \cdot n^2) = O(n^5)$ in the worst case ($O(n^3)$ with an adjacency matrix).
+The size of $\inner{G}$ is at least $n$, so this is polynomial in the input size, and all loops are finite, so $D_{\text{BC}}$ always halts.
+Therefore $D_{\text{BC}}$ is a polynomial-time decider for $\BigClique$, and $\BigClique \in \P$.
+
+The difference from $\HalfClique$ is the number of candidates: there are $\binom{n}{n/2}$ sets of size $n/2$, which is exponential in $n$, but only $n$ sets of size $n - 1$.
+
+\qpage{Q4.1 Placing haunted houses (a)}
+
+The certificate is the set $S$ of neighborhoods that get a haunted house.
+
+\begin{algorithmic}[1]
+  \Require{A graph $G = (V, E)$, an integer $k$ with $0 \leq k \leq \abs{V}$, and a certificate $c$}
+  \Ensure{accept if $c$ is a set of at most $k$ vertices to which every vertex has access, reject otherwise}
+  \Function{$V_{\text{HH}}$}{$(G, k), c$}
+    \If{$c$ is not a list of distinct vertices of $V$} \Return reject
+    \EndIf
+    \State Let $S$ be the set of vertices listed in $c$
+    \If{$\abs{S} > k$} \Return reject
+    \EndIf
+    \For{each vertex $v \in V$}
+      \If{$v \notin S$ and there is no $u \in S$ with $(u, v) \in E$} \Return reject
+      \EndIf
+    \EndFor
+    \State \Return accept
+  \EndFunction
+\end{algorithmic}
+
+\textbf{Efficiency.}
+Let $n = \abs{V}$.
+A certificate that passes the first check lists at most $n$ vertices, so its size is polynomial in the size of $(G, k)$.
+Checking that $c$ is a list of distinct vertices of $V$ takes $O(n^2)$ comparisons, and comparing $\abs{S}$ with $k$ takes $O(n)$ time.
+The loop runs $n$ times; each iteration checks membership of $v$ in $S$ in $O(n)$ time and, for each of the at most $n$ vertices $u \in S$, looks up $(u, v)$ in $E$ in at most $O(\abs{E})$ time.
+The total is $O(n^2 \abs{E})$, polynomial in the size of $(G, k)$.
+
+\textbf{Correctness.} I show $(G, k) \in \HH \iff \exists c$ such that $V_{\text{HH}}((G, k), c)$ accepts.
+
+($\Longrightarrow$) Suppose $(G, k) \in \HH$.
+Then there is a set $S \subseteq V$ with $\abs{S} \leq k$ such that every $v \in V$ is in $S$ or adjacent to some $u \in S$.
+Let $c$ be the list of the vertices of $S$, each written once.
+Then the first two checks pass, and for every $v \in V$ the condition in the loop is false, so $V_{\text{HH}}$ reaches the last line and accepts.
+
+($\Longleftarrow$) Suppose $V_{\text{HH}}((G, k), c)$ accepts for some $c$.
+Then every check passed: $c$ lists a set $S \subseteq V$, $\abs{S} \leq k$, and for every $v \in V$ either $v \in S$ or there is some $u \in S$ with $(u, v) \in E$.
+So every vertex has access to $S$, and $(G, k) \in \HH$.
+
+Hence $V_{\text{HH}}$ is an efficient verifier for $\HH$, and $\HH \in \NP$.
+
+\qpage{Q4.2 Placing haunted houses (b)}
+
+Take $G$ to be a triangle, $V = \set{a, b, c}$ and $E = \set{(a,b), (b,c), (a,c)}$, with $k = 1$.
+This is a legal instance: $k = 1 \leq 3 = \abs{V}$ and no vertex is isolated.
+
+\textbf{$(G, 1) \notin \VC$.}
+A single vertex cannot cover all three edges: $a$ does not cover $(b, c)$, $b$ does not cover $(a, c)$, and $c$ does not cover $(a, b)$.
+The empty set covers nothing.
+So $G$ has no vertex cover of size at most $1$.
+
+\textbf{$f(G, 1) = (G, 1) \in \HH$.}
+Take $S = \set{a}$.
+Then $a \in S$, and $b$ and $c$ are both adjacent to $a$, so every vertex has access to $S$, and $\abs{S} = 1 \leq k$.
+
+So $(G, 1) \notin \VC$ but $f(G, 1) \in \HH$, which violates the requirement $x \in \VC \iff f(x) \in \HH$.
+The reason is that covering edges is a stronger requirement than covering vertices: in a triangle one vertex is next to everything, but it still misses the edge opposite to it.
+
+\qpage{Q4.3 Placing haunted houses (c)}
+
+Let $n = \abs{V}$ and $m = \abs{E}$.
+The input $(G, k)$ has size at least $n + m$ (the graph has to list its vertices and edges), plus $O(\log n)$ bits for $k \leq n$.
+
+\begin{itemize}
+  \item Initializing $G'$ with $V' = V$ and $E' = E$ copies the graph, which takes $O(n + m)$ time.
+  \item The \textbf{for} loop runs once per edge of $G$, i.e., exactly $m$ times.
+  (It iterates over the original edge set $E$, not over $E'$, so the edges added inside the loop do not create more iterations.)
+  Each iteration creates one new vertex and adds two new edges, which is a constant number of insertions, $O(1)$ time each with any reasonable representation (and certainly at most polynomial in $n + m$).
+  So the loop takes $O(m)$ time.
+  \item Returning $(G', k)$ writes out the new graph and copies $k$.
+  $G'$ has $\abs{V'} = n + m$ vertices and $\abs{E'} = m + 2m = 3m$ edges, so the output has size $O(n + m)$ and writing it takes $O(n + m)$ time.
+\end{itemize}
+
+In total $f$ runs in $O(n + m)$ time, which is linear, and in particular polynomial, in the size of the input $(G, k)$.
+
+\qpage{Q4.4 Placing haunted houses (d)}
+
+Assume $(G, k) \in \VC$, and let $S \subseteq V$ be a vertex cover of $G$ with $\abs{S} \leq k$.
+I claim that $S' = S$ works for $G'$.
+Since $S \subseteq V \subseteq V'$, $S'$ is a set of vertices of $G'$, and $\abs{S'} = \abs{S} \leq k$.
+(Also $k \leq \abs{V} \leq \abs{V'}$, so $(G', k)$ is a legal instance.)
+It remains to show that every vertex of $V'$ has access to $S'$.
+The vertices of $V'$ are of two kinds.
+
+\textbf{Original vertices $v \in V$.}
+By assumption $G$ has no isolated vertices, so $v$ is an endpoint of some edge $(u, v) \in E$.
+Since $S$ is a vertex cover, it contains an endpoint of this edge: $v \in S$ or $u \in S$.
+If $v \in S = S'$, then $v$ has access to $S'$.
+If $u \in S = S'$, then $v$ is adjacent to $u$ in $G'$, because $(u, v) \in E \subseteq E'$, so again $v$ has access to $S'$.
+
+\textbf{New vertices $w_{uv}$, for $(u, v) \in E$.}
+Since $S$ is a vertex cover of $G$ and $(u, v) \in E$, we have $u \in S$ or $v \in S$.
+The reduction added both edges $(w_{uv}, u)$ and $(w_{uv}, v)$ to $E'$, so $w_{uv}$ is adjacent in $G'$ to a vertex of $S = S'$, and $w_{uv}$ has access to $S'$.
+
+So every vertex of $V'$ has access to $S'$ and $\abs{S'} \leq k$, i.e., $f(G, k) = (G', k) \in \HH$.
+
+\qpage{Q4.5 Placing haunted houses (e)}
+
+Assume $(G', k) \in \HH$, and let $S' \subseteq V'$ be a set with $\abs{S'} \leq k$ such that every vertex of $V'$ has access to $S'$.
+$S'$ may contain new vertices $w_{uv}$, which are not vertices of $G$, so $S'$ itself may not be a vertex cover of $G$.
+I replace each new vertex in $S'$ by one endpoint of its edge.
+
+For each edge $(u, v) \in E$, fix one of its endpoints and call it $e(w_{uv})$ (say, $e(w_{uv}) = u$).
+Define
+\[
+  S = (S' \cap V) \ \cup \ \set{e(w_{uv}) : w_{uv} \in S'}.
+\]
+
+\textbf{$S \subseteq V$ and $\abs{S} \leq k$.}
+Every element of $S$ is an original vertex.
+Each element of $S'$ contributes at most one element to $S$: an original vertex contributes itself, and a new vertex $w_{uv}$ contributes $e(w_{uv})$.
+(Several elements of $S'$ may contribute the same vertex, which only makes $S$ smaller.)
+So $\abs{S} \leq \abs{S'} \leq k$.
+
+\textbf{$S$ is a vertex cover of $G$.}
+Let $(u, v) \in E$ be any edge of $G$.
+The reduction created the vertex $w_{uv} \in V'$, and by assumption $w_{uv}$ has access to $S'$.
+There are two cases.
+\begin{itemize}
+  \item $w_{uv} \in S'$.
+  Then $e(w_{uv}) \in S$, and $e(w_{uv})$ is an endpoint of $(u, v)$, so $S$ covers $(u, v)$.
+  \item $w_{uv} \notin S'$.
+  Then $w_{uv}$ is adjacent in $G'$ to some vertex of $S'$.
+  The only edges of $G'$ at $w_{uv}$ are $(w_{uv}, u)$ and $(w_{uv}, v)$: the reduction adds exactly these two when it creates $w_{uv}$, and never adds an edge between two new vertices.
+  So the only neighbors of $w_{uv}$ are $u$ and $v$, and hence $u \in S'$ or $v \in S'$.
+  Both are original vertices, so $u \in S' \cap V \subseteq S$ or $v \in S' \cap V \subseteq S$, and $S$ covers $(u, v)$.
+\end{itemize}
+In both cases $S$ contains an endpoint of $(u, v)$.
+Since the edge was arbitrary, $S$ is a vertex cover of $G$.
+
+So $G$ has a vertex cover of size at most $k$, i.e., $(G, k) \in \VC$.
+
+Together with parts (c) and (d), $f$ is a polynomial-time mapping reduction, so $\VC \lp \HH$ and $\HH$ is $\NP$-hard; with part (a), $\HH$ is $\NP$-complete.
+
+\qpage{Q5.1 Understanding $\P$, $\NP$, and polynomial-time mapping reductions (a)}
+
+The verifier ignores the certificate and decides $x$ by itself using $M$.
+
+\begin{algorithmic}[1]
+  \Function{$V$}{$x, c$}
+    \State Run $M$ on $x$ \Comment{$c$ is ignored}
+    \If{$M$ accepts $x$} \Return accept
+    \Else{} \Return reject
+    \EndIf
+  \EndFunction
+\end{algorithmic}
+
+\textbf{$V$ is efficient.}
+$M$ is an efficient decider, so there is a polynomial $p$ such that $M$ halts on $x$ within $p(\abs{x})$ steps.
+$V$ runs $M$ on $x$ once and then does constant extra work, and it never reads $c$.
+So $V$ runs in time $O(p(\abs{x}))$, polynomial in $\abs{x}$, whatever $c$ is.
+
+\textbf{$V$ is correct.} I show $x \in L \iff \exists c$ such that $V(x, c)$ accepts.
+
+($\Longrightarrow$) Suppose $x \in L$.
+Since $M$ decides $L$, $M$ accepts $x$.
+Then $V(x, c)$ accepts for every $c$; in particular it accepts for $c = \varepsilon$, a certificate of size $0$, which is certainly polynomial in $\abs{x}$.
+So there exists a $c$ such that $V(x, c)$ accepts.
+
+($\Longleftarrow$) I prove the contrapositive.
+Suppose $x \notin L$.
+Since $M$ decides $L$, $M$ rejects $x$.
+Then $V(x, c)$ rejects for every $c$, because $V$'s answer does not depend on $c$.
+So there is no $c$ such that $V(x, c)$ accepts.
+
+Hence $V$ is an efficient verifier for $L$, and $L \in \NP$.
+Since $L \in \P$ was arbitrary, $\P \subseteq \NP$.
+
+\qpage{Q5.2 Understanding $\P$, $\NP$, and polynomial-time mapping reductions (b)}
+
+Since $L \in \NP$, there is an efficient verifier $V$ for $L$: there is a polynomial $p$ such that $V(x, c)$ halts within $p(\abs{x})$ steps for every $x$ and $c$, and $x \in L$ if and only if $V(x, c)$ accepts for some $c$.
+The decider tries every certificate that could matter.
+
+\begin{algorithmic}[1]
+  \Require{A string $x$}
+  \Ensure{accept if $x \in L$, reject otherwise}
+  \Function{$D$}{$x$}
+    \For{each string $c$ of length at most $p(\abs{x})$}
+      \If{$V(x, c)$ accepts} \Return accept
+      \EndIf
+    \EndFor
+    \State \Return reject
+  \EndFunction
+\end{algorithmic}
+
+\textbf{$D$ always halts.}
+The alphabet is finite, so there are finitely many strings of length at most $p(\abs{x})$, and each call $V(x, c)$ halts because $V$ is a verifier.
+
+\textbf{$D$ is correct.}
+\begin{itemize}
+  \item If $x \in L$, then $V(x, c)$ accepts for some certificate $c$.
+  We may take $\abs{c} \leq p(\abs{x})$: $V$ makes at most $p(\abs{x})$ steps, so it reads at most the first $p(\abs{x})$ symbols of $c$, and it behaves the same way on the prefix of $c$ of that length.
+  The loop reaches this certificate (unless it has accepted earlier), so $D$ accepts.
+  \item If $x \notin L$, then $V(x, c)$ rejects for every $c$, so the loop never accepts and $D$ rejects.
+\end{itemize}
+
+So $D$ decides $L$.
+Since $L \in \NP$ was arbitrary, every language in $\NP$ is decidable.
+($D$ takes exponential time, since there are exponentially many certificates, but a decider only has to halt.)
+
+\qpage{Q5.3 Understanding $\P$, $\NP$, and polynomial-time mapping reductions (c)}
+
+Assume $A \lp B$.
+By the first definition there is a polynomial-time computable function $f$ such that $x \in A \iff f(x) \in B$ for every string $x$.
+
+To show $A \lT B$, I must give a Turing machine that decides $A$ using an oracle for $B$.
+Let $O$ be an oracle that decides $B$: $O$ halts on every input, and $O(y)$ accepts if and only if $y \in B$.
+
+\begin{algorithmic}[1]
+  \Require{A string $x$}
+  \Ensure{accept if $x \in A$, reject otherwise}
+  \Function{$M_A$}{$x$}
+    \State Compute $y \gets f(x)$
+    \State \Return $O(y)$
+  \EndFunction
+\end{algorithmic}
+
+\textbf{$M_A$ always halts.}
+$f$ is computable in polynomial time, so computing $f(x)$ halts (after at most polynomially many steps).
+Then $M_A$ makes one call to $O$, which halts because $O$ decides $B$, and returns its answer.
+
+\textbf{Correctness.}
+By the property of $f$, the fact that $O$ decides $B$, and the code of $M_A$,
+\begin{align*}
+  x \in A &\Longrightarrow f(x) \in B \\
+  &\Longrightarrow O(f(x)) \text{ accepts} \\
+  &\Longrightarrow M_A(x) \text{ accepts}, \\[0.5em]
+  x \notin A &\Longrightarrow f(x) \notin B \\
+  &\Longrightarrow O(f(x)) \text{ rejects} \\
+  &\Longrightarrow M_A(x) \text{ rejects}.
+\end{align*}
+So $M_A$ decides $A$ given an oracle for $B$, that is, $A \lT B$.
+
+A polynomial-time mapping reduction is thus a very restricted Turing reduction: it calls the oracle exactly once, returns the oracle's answer unchanged, and does only polynomial work before the call.
+
+\qpage{Q5.4 Understanding $\P$, $\NP$, and polynomial-time mapping reductions (d)}
+
+Assume $A \lp B$ and $B \lp C$.
+Then there are functions $f$ and $g$ and polynomials $p$ and $q$ such that
+\begin{itemize}
+  \item $f$ is computable in time at most $p(\abs{x})$ on input $x$, and $x \in A \iff f(x) \in B$ for all $x$;
+  \item $g$ is computable in time at most $q(\abs{y})$ on input $y$, and $y \in B \iff g(y) \in C$ for all $y$.
+\end{itemize}
+We may assume $p$ and $q$ have nonnegative coefficients (otherwise replace each coefficient by its absolute value, which only makes the bounds larger), so both are nondecreasing.
+
+Define $h(x) = g(f(x))$: first compute $y = f(x)$, then compute and output $g(y)$.
+
+\textbf{Correctness.}
+For every $x$, using the property of $f$ and then the property of $g$ with $y = f(x)$,
+\[
+  x \in A \iff f(x) \in B \iff g(f(x)) \in C \iff h(x) \in C.
+\]
+
+\textbf{Running time.}
+Let $n = \abs{x}$.
+Computing $y = f(x)$ takes at most $p(n)$ steps.
+The time to compute $g(y)$ is at most $q(\abs{y})$, which is polynomial in $\abs{y}$, not in $n$, so we need to bound $\abs{y}$ in terms of $n$.
+A Turing machine writes at most one tape cell per step, so after at most $p(n)$ steps the tape of the machine computing $f$ holds at most $n + p(n)$ symbols (the $n$ input cells plus at most $p(n)$ newly written ones).
+Hence
+\[
+  \abs{y} = \abs{f(x)} \leq n + p(n).
+\]
+Since $q$ is nondecreasing, computing $g(y)$ takes at most $q(\abs{y}) \leq q(n + p(n))$ steps.
+The total time to compute $h(x)$ is at most
+\[
+  p(n) + q(n + p(n)).
+\]
+Substituting a polynomial into a polynomial gives a polynomial (if $p$ has degree $a$ and $q$ has degree $b$, then $q(n + p(n))$ has degree at most $\max(a,1) \cdot b$), and the sum of two polynomials is a polynomial.
+So $h$ is computable in time polynomial in $n = \abs{x}$, the size of the input to $A$.
+
+Therefore $h$ is a polynomial-time computable function with $x \in A \iff h(x) \in C$, i.e., $A \lp C$.
+
+\qpage{Q6 Trick-or-Treating is (NP-)Hard}
+
+I show $\HC \lp \TSP$.
+Since $\HC$ is $\NP$-hard (lecture), this proves that $\TSP$ is $\NP$-hard.
+
+\textbf{Step 1: the reduction.}
+Given an unweighted graph $G = (V, E)$ with $n = \abs{V}$ vertices, keep the same vertices, make the graph complete, give weight $1$ to the pairs that are edges of $G$ and weight $2$ to the pairs that are not, and set the budget to $n$.
+
+\begin{algorithmic}[1]
+  \Require{An unweighted graph $G = (V, E)$}
+  \Ensure{A weighted complete graph $G'$ and a budget $k$}
+  \Function{$f$}{$G$}
+    \State $n \gets \abs{V}$
+    \State Initialize $G' = (V, E')$ with $E' = \emptyset$
+    \For{each pair of distinct vertices $u, v \in V$}
+      \State Add the edge $(u, v)$ to $E'$
+      \If{$(u, v) \in E$} $w(u, v) \gets 1$
+      \Else{} $w(u, v) \gets 2$
+      \EndIf
+    \EndFor
+    \State \Return $(G', k = n)$
+  \EndFunction
+\end{algorithmic}
+
+$G'$ is a complete weighted graph on $V$, so $(G', n)$ is an instance of $\TSP$.
+The reduction never looks for a Hamiltonian cycle; it only looks at which pairs are edges.
+
+\textbf{Step 2: polynomial time.}
+The size of $G$ is at least $n$.
+The loop runs $\binom{n}{2} = O(n^2)$ times, and each iteration adds one edge and does one lookup in $E$, which takes at most $O(\abs{E}) = O(n^2)$ time.
+Writing $k = n$ takes $O(\log n)$ time.
+So $f$ runs in $O(n^4)$ time, polynomial in the size of $G$.
+
+In both directions below I use the following fact: a cycle that visits every one of the $n$ vertices exactly once consists of exactly $n$ edges (one leaving each vertex).
+
+\textbf{Step 3a: $G \in \HC \Longrightarrow (G', n) \in \TSP$.}
+Assume $G \in \HC$, and let $H$ be a cycle in $G$ that visits every vertex exactly once.
+$H$ uses $n$ edges, all of them in $E$.
+$G'$ has the same vertex set and contains every pair as an edge, so $H$ is also a cycle in $G'$ that visits every vertex exactly once.
+Each edge of $H$ is in $E$, so it has weight $1$ in $G'$, and the total weight of $H$ in $G'$ is $n \cdot 1 = n \leq k$.
+So $(G', n) \in \TSP$.
+
+\textbf{Step 3b: $(G', n) \in \TSP \Longrightarrow G \in \HC$.}
+Assume $(G', n) \in \TSP$, and let $T$ be a cycle in $G'$ of total weight at most $n$ that visits every vertex exactly once.
+$T$ uses exactly $n$ edges, and every edge of $G'$ has weight $1$ or $2$.
+If $T$ used an edge of weight $2$, its total weight would be at least $(n - 1) \cdot 1 + 2 = n + 1 > n$, a contradiction.
+So every edge of $T$ has weight $1$.
+By construction, an edge of $G'$ has weight $1$ only if it is an edge of $G$.
+So all $n$ edges of $T$ are in $E$, which means $T$ is a cycle in $G$ that visits every vertex exactly once.
+So $G \in \HC$.
+
+By Steps 3a and 3b, $G \in \HC \iff f(G) = (G', n) \in \TSP$, and by Step 2, $f$ is computable in polynomial time.
+So $\HC \lp \TSP$, and since $\HC$ is $\NP$-hard, $\TSP$ is $\NP$-hard.
+
+\qpage{Q7.1 Subset Sum (a)}
+
+Step 3: It constructs a target sum $s$ that has $m + n$ decimal digits, where the first $m$ digits are all $\mathbf{3}$ and the last $n$ digits are all $\mathbf{1}$.
+
+That is,
+\[
+  s = \underbrace{33 \cdots 3}_{m} \, \underbrace{11 \cdots 1}_{n}.
+\]
+
+\qpage{Q7.2 Subset Sum (b)}
+
+Here $m = 2$ and $n = 3$, so by part (a)
+\[
+  s = 33111.
+\]
+
+The formula $\phi = (x_1 \vee \overline{x_2} \vee x_3) \wedge (\overline{x_1} \vee x_2 \vee \overline{x_3})$ is satisfied by $x_1 = x_2 = x_3 = \text{true}$: the first clause is true because of $x_1$ (and $x_3$), and the second because of $x_2$.
+Following this assignment, take $t_1, t_2, t_3$, and then fill up the clause digits with $a_1$, $a_2$, $b_2$:
+\[
+  I = \set{t_1, t_2, t_3, a_1, a_2, b_2} = \set{10100,\ 1010,\ 10001,\ 10000,\ 1000,\ 1000}.
+\]
+
+\begin{center}
+  \begin{tabular}{| c || c | c | c | c | c |}
+    \hline
+    Number & $j=1$ & $j=2$ & $i=1$ & $i=2$ & $i=3$ \\ \hline \hline
+    $t_1$ & 1 & 0 & 1 & 0 & 0 \\ \hline
+    $t_2$ & 0 & 1 & 0 & 1 & 0 \\ \hline
+    $t_3$ & 1 & 0 & 0 & 0 & 1 \\ \hline
+    $a_1$ & 1 & 0 & 0 & 0 & 0 \\ \hline
+    $a_2$ & 0 & 1 & 0 & 0 & 0 \\ \hline
+    $b_2$ & 0 & 1 & 0 & 0 & 0 \\ \hline \hline
+    sum   & 3 & 3 & 1 & 1 & 1 \\ \hline
+  \end{tabular}
+\end{center}
+
+Check:
+\[
+  10100 + 1010 + 10001 + 10000 + 1000 + 1000 = 33111 = s.
+\]
+$I$ is a submultiset of $A$: it uses one copy of $10000$ (of the two copies $a_1, b_1$ in $A$) and both copies of $1000$ ($a_2$ and $b_2$).
+So $(A, s) \in \SSUM$.
+
+\qpage{Q7.3 Subset Sum (c)}
+
+$\phi' = (x_1 \vee x_1 \vee x_1) \wedge (\overline{x_1} \vee \overline{x_1} \vee \overline{x_1})$ has $n = 1$ variable and $m = 2$ clauses, so all numbers have $m + n = 3$ digits.
+The literal $x_1$ appears in $c_1$ only, and $\overline{x_1}$ appears in $c_2$ only.
+
+\begin{center}
+  \begin{tabular}{| c || c | c | c |}
+    \hline
+    Number & $j=1$ & $j=2$ & $i=1$ \\ \hline \hline
+    $a_1$ & 1 & 0 & 0 \\ \hline
+    $b_1$ & 1 & 0 & 0 \\ \hline
+    $a_2$ & 0 & 1 & 0 \\ \hline
+    $b_2$ & 0 & 1 & 0 \\ \hline \hline
+    $t_1$ & 1 & 0 & 1 \\ \hline
+    $f_1$ & 0 & 1 & 1 \\ \hline \hline \hline
+    $s$   & 3 & 3 & 1 \\ \hline
+  \end{tabular}
+\end{center}
+
+The $\SSUM$ instance is
+\[
+  (A = \set{100,\ 100,\ 10,\ 10,\ 101,\ 11}, \ s = 331).
+\]
+
+\textbf{This instance is not in $\SSUM$.}
+The sum of all six numbers in $A$ is $100 + 100 + 10 + 10 + 101 + 11 = 332$.
+A submultiset $I$ of $A$ with sum $331$ would have to leave out numbers that sum to exactly $332 - 331 = 1$.
+Every number in $A$ is at least $10$, so this is impossible.
+Hence no submultiset of $A$ sums to $s$.
+
+The same thing in terms of the formula: the last digit of $s$ is $1$, so $I$ must contain exactly one of $t_1, f_1$.
+If it contains $t_1$ but not $f_1$, the only numbers left with a $1$ in the second digit are $a_2$ and $b_2$, so the second digit of the sum is at most $2 < 3$.
+If it contains $f_1$ but not $t_1$, the first digit is at most $2 < 3$ in the same way.
+This matches the fact that $\phi'$ is not satisfiable: setting $x_1$ true leaves clause $c_2$ unsatisfied, and setting it false leaves $c_1$ unsatisfied.
+
+\qpage{Q7.4 Subset Sum (d)}
+
+I number the digits $1, \ldots, m + n$ from the left as in the table, and call the first $m$ the \emph{clause digits} and the last $n$ the \emph{variable digits}.
+The following fact is used in this part and the next.
+
+\textbf{No-carry fact.}
+\emph{For any submultiset $I \subseteq A$ and any position $d$, the $d$th digit of $\sum_{a \in I} a$ equals the number of elements of $I$ whose $d$th digit is $1$.}
+
+Proof: every digit of every number in $A$ is $0$ or $1$, so it is enough to show that at most $9$ numbers of $A$ have a $1$ in any given position; then adding up a column never produces a carry.
+In a variable digit $m + i$, only $t_i$ and $f_i$ have a $1$.
+In a clause digit $j$, the numbers with a $1$ are $a_j$, $b_j$, and those $t_i$ or $f_i$ whose literal ($x_i$ or $\overline{x_i}$, respectively) appears in $c_j$.
+Different such numbers correspond to different literals of $c_j$, and $c_j$ has three literals, so there are at most $2 + 3 = 5$ numbers with a $1$ in digit $j$.
+In both cases the count is at most $5 \leq 9$. \hfill $\square$
+
+\medskip
+Now assume $\phi \in \TSAT$, and let $\alpha$ be a satisfying assignment of $\phi$.
+I use $\alpha$ to build a submultiset $I \subseteq A$ with sum $s$.
+
+\textbf{Variable numbers.}
+For each $i = 1, \ldots, n$: if $\alpha(x_i) = \text{true}$, put $t_i$ into $I$; if $\alpha(x_i) = \text{false}$, put $f_i$ into $I$.
+Call the number chosen for $x_i$ the \emph{selected} number $u_i$.
+So $u_i$ has a $1$ in clause digit $j$ exactly when the literal of $x_i$ that is true under $\alpha$ appears in $c_j$.
+
+\textbf{Clause numbers.}
+For each $j = 1, \ldots, m$, let $r_j$ be the number of selected numbers $u_1, \ldots, u_n$ whose $j$th digit is $1$.
+\begin{itemize}
+  \item $r_j \geq 1$: $\alpha$ satisfies $c_j$, so $c_j$ contains a literal that is true under $\alpha$.
+  If this literal is $x_i$, then $\alpha(x_i) = \text{true}$, so $u_i = t_i$, and the $j$th digit of $t_i$ is $1$ because $x_i$ appears in $c_j$.
+  If it is $\overline{x_i}$, then $\alpha(x_i) = \text{false}$, so $u_i = f_i$, and the $j$th digit of $f_i$ is $1$ because $\overline{x_i}$ appears in $c_j$.
+  \item $r_j \leq 3$: selected numbers with a $1$ in digit $j$ correspond to different variables whose literals appear in $c_j$, and $c_j$ has only three literals.
+\end{itemize}
+So $3 - r_j \in \set{0, 1, 2}$.
+If $3 - r_j = 1$, put $a_j$ into $I$; if $3 - r_j = 2$, put both $a_j$ and $b_j$ into $I$; if $3 - r_j = 0$, put neither.
+
+\textbf{The sum of $I$ is $s$.}
+By the no-carry fact it is enough to count the $1$s of $I$ in each position.
+\begin{itemize}
+  \item Variable digit $m + i$: the only numbers of $A$ with a $1$ here are $t_i$ and $f_i$, and $I$ contains exactly one of them.
+  So this digit of the sum is $1$.
+  \item Clause digit $j$: the numbers of $I$ with a $1$ here are the $r_j$ selected numbers counted above, plus the $3 - r_j$ numbers among $a_j, b_j$ that were added.
+  (The numbers $a_{j'}, b_{j'}$ for $j' \neq j$ have a $0$ here.)
+  So this digit of the sum is $r_j + (3 - r_j) = 3$.
+\end{itemize}
+So the sum of $I$ has $3$ in each of the first $m$ digits and $1$ in each of the last $n$ digits, which is exactly $s$.
+
+Therefore $I \subseteq A$ and $\sum_{a \in I} a = s$, i.e., $f(\phi) = (A, s) \in \SSUM$.
+
+\qpage{Q7.5 Subset Sum (e)}
+
+Assume $(A, s) \in \SSUM$, and let $I \subseteq A$ be a submultiset with $\sum_{a \in I} a = s$.
+I use $I$ to build a satisfying assignment of $\phi$.
+Here $(A, s)$ is not an arbitrary instance but the one constructed from $\phi$, so I can use its structure; in particular the no-carry fact from part (d) applies.
+By that fact, for each position $d$, the number of elements of $I$ with a $1$ in digit $d$ equals the $d$th digit of $s$: it is $3$ for each clause digit and $1$ for each variable digit.
+
+\textbf{$I$ contains exactly one of $t_i, f_i$ for each $i$.}
+The only numbers of $A$ with a $1$ in the variable digit $m + i$ are $t_i$ and $f_i$.
+Exactly one element of $I$ has a $1$ in this digit, so exactly one of $t_i$, $f_i$ is in $I$.
+
+\textbf{The assignment.}
+Define $\alpha$ by
+\[
+  \alpha(x_i) = \begin{cases} \text{true} & \text{if } t_i \in I, \\ \text{false} & \text{if } f_i \in I. \end{cases}
+\]
+By the previous paragraph exactly one of the two cases holds for each $i$, so $\alpha$ is a well-defined assignment to $x_1, \ldots, x_n$.
+
+\textbf{$\alpha$ satisfies every clause.}
+Fix a clause $c_j$.
+Exactly three elements of $I$ have a $1$ in the clause digit $j$.
+Among the clause numbers, only $a_j$ and $b_j$ have a $1$ in digit $j$, so they account for at most two of the three.
+Hence at least one of the three is a variable number: there is some $i$ such that $t_i \in I$ or $f_i \in I$, and that number has a $1$ in digit $j$.
+\begin{itemize}
+  \item If $t_i \in I$ and the $j$th digit of $t_i$ is $1$: by construction the literal $x_i$ appears in $c_j$, and $\alpha(x_i) = \text{true}$ because $t_i \in I$.
+  So $c_j$ contains a true literal.
+  \item If $f_i \in I$ and the $j$th digit of $f_i$ is $1$: by construction the literal $\overline{x_i}$ appears in $c_j$, and $\alpha(x_i) = \text{false}$ because $f_i \in I$ (and so $t_i \notin I$).
+  So $\overline{x_i}$ is true under $\alpha$, and $c_j$ contains a true literal.
+\end{itemize}
+In both cases $\alpha$ satisfies $c_j$.
+Since $c_j$ was arbitrary, $\alpha$ satisfies every clause of $\phi$.
+
+Therefore $\phi$ is satisfiable, i.e., $\phi \in \TSAT$.
+
+Together with part (d) and the fact that the reduction runs in polynomial time, this shows $\TSAT \lp \SSUM$, so $\SSUM$ is $\NP$-hard.
+
+\qpage{Q8 (Optional extra credit)}
+
+Since $L_1, L_2 \in \NP \cap \coNP$, there are four efficient verifiers:
+\begin{itemize}
+  \item $V_1$ for $L_1$ and $\overline{V_1}$ for $\overline{L_1}$;
+  \item $V_2$ for $L_2$ and $\overline{V_2}$ for $\overline{L_2}$.
+\end{itemize}
+So both ``$x \in L_i$'' and ``$x \notin L_i$'' have short certificates that can be checked in polynomial time.
+Write $L = L_1 \oplus L_2$.
+For every $x$,
+\begin{align*}
+  x \in L &\iff (x \in L_1 \text{ and } x \in \overline{L_2}) \text{ or } (x \in \overline{L_1} \text{ and } x \in L_2), \\
+  x \in \overline{L} &\iff (x \in L_1 \text{ and } x \in L_2) \text{ or } (x \in \overline{L_1} \text{ and } x \in \overline{L_2}).
+\end{align*}
+Each of the four cases is a statement that two of the verifiers can check, so a certificate says which case holds and gives one certificate for each of the two verifiers.
+
+\begin{algorithmic}[1]
+  \Function{$V$}{$x, c$} \Comment{verifier for $L_1 \oplus L_2$}
+    \If{$c$ is not of the form $(b, c_1, c_2)$ with $b \in \set{1, 2}$} \Return reject
+    \EndIf
+    \If{$b = 1$ and $V_1(x, c_1)$ accepts and $\overline{V_2}(x, c_2)$ accepts} \Return accept
+    \EndIf
+    \If{$b = 2$ and $\overline{V_1}(x, c_1)$ accepts and $V_2(x, c_2)$ accepts} \Return accept
+    \EndIf
+    \State \Return reject
+  \EndFunction
+  \Statex
+  \Function{$\overline{V}$}{$x, c$} \Comment{verifier for $\overline{L_1 \oplus L_2}$}
+    \If{$c$ is not of the form $(b, c_1, c_2)$ with $b \in \set{1, 2}$} \Return reject
+    \EndIf
+    \If{$b = 1$ and $V_1(x, c_1)$ accepts and $V_2(x, c_2)$ accepts} \Return accept
+    \EndIf
+    \If{$b = 2$ and $\overline{V_1}(x, c_1)$ accepts and $\overline{V_2}(x, c_2)$ accepts} \Return accept
+    \EndIf
+    \State \Return reject
+  \EndFunction
+\end{algorithmic}
+
+\textbf{Efficiency.}
+Each of $V$ and $\overline{V}$ parses $c$ and makes at most four calls to verifiers that run in time polynomial in $\abs{x}$, so it runs in polynomial time.
+The certificates $c_1, c_2$ needed below have size polynomial in $\abs{x}$, so $c = (b, c_1, c_2)$ does too.
+
+\textbf{$V$ is correct, so $L \in \NP$.}
+
+($\Longrightarrow$) Suppose $x \in L$.
+If $x \in L_1$ and $x \notin L_2$, there are $c_1, c_2$ such that $V_1(x, c_1)$ and $\overline{V_2}(x, c_2)$ accept, so $V(x, (1, c_1, c_2))$ accepts.
+If $x \notin L_1$ and $x \in L_2$, there are $c_1, c_2$ such that $\overline{V_1}(x, c_1)$ and $V_2(x, c_2)$ accept, so $V(x, (2, c_1, c_2))$ accepts.
+
+($\Longleftarrow$) Suppose $V(x, c)$ accepts for some $c = (b, c_1, c_2)$.
+If it accepted with $b = 1$, then $V_1(x, c_1)$ and $\overline{V_2}(x, c_2)$ accept, so $x \in L_1$ and $x \in \overline{L_2}$, because a verifier accepts some certificate only for strings in its language.
+If it accepted with $b = 2$, then in the same way $x \in \overline{L_1}$ and $x \in L_2$.
+In both cases $x$ is in exactly one of $L_1, L_2$, so $x \in L$.
+
+\textbf{$\overline{V}$ is correct, so $\overline{L} \in \NP$, i.e., $L \in \coNP$.}
+
+($\Longrightarrow$) Suppose $x \in \overline{L}$, so $x$ is in both of $L_1, L_2$ or in neither.
+If $x \in L_1$ and $x \in L_2$, there are $c_1, c_2$ such that $V_1(x, c_1)$ and $V_2(x, c_2)$ accept, so $\overline{V}(x, (1, c_1, c_2))$ accepts.
+If $x \notin L_1$ and $x \notin L_2$, there are $c_1, c_2$ such that $\overline{V_1}(x, c_1)$ and $\overline{V_2}(x, c_2)$ accept, so $\overline{V}(x, (2, c_1, c_2))$ accepts.
+
+($\Longleftarrow$) Suppose $\overline{V}(x, c)$ accepts for some $c = (b, c_1, c_2)$.
+If $b = 1$, then $V_1(x, c_1)$ and $V_2(x, c_2)$ accept, so $x \in L_1 \cap L_2$.
+If $b = 2$, then $\overline{V_1}(x, c_1)$ and $\overline{V_2}(x, c_2)$ accept, so $x \notin L_1$ and $x \notin L_2$.
+In both cases $x$ is not in exactly one of $L_1, L_2$, so $x \in \overline{L}$.
+
+Hence $L_1 \oplus L_2 \in \NP$ and $L_1 \oplus L_2 \in \coNP$, that is, $L_1 \oplus L_2 \in \NP \cap \coNP$.
+
+\end{document}
