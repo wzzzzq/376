@@ -5,6 +5,7 @@
 \usepackage{algpseudocode}
 \usepackage{fancyhdr}
 \usepackage{enumerate}
+\usepackage{graphicx}
 \usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
 
 \newcommand{\hwnum}{8}
@@ -56,8 +57,32 @@ I did not collaborate with anyone on this homework.
 
 \qpage{Q1 Self assessment}
 
-% TODO(me): fill in from my graded midterm and the posted midterm solutions.
-\textbf{[TO FILL IN: copy or screenshot of my midterm answer for the chosen part, then a few sentences on what was deficient and how to fix it.]}
+The part of the midterm with the most room for improvement is Question 17, the Turing reduction $\Lacc \lT L_{\varepsilon\text{-AGREE}}$, and specifically my proof of correctness.
+Here is what I submitted (the answer box on page 13 and its continuation on page 14):
+
+\begin{center}
+  \includegraphics[width=0.47\linewidth]{midterm_q17_p13.png}
+
+  \medskip
+  \includegraphics[width=0.56\linewidth]{midterm_q17_p14.png}
+\end{center}
+
+\textbf{What was deficient.}
+The construction is fine, but the second half of the correctness proof is unsound.
+For $(\inner{M}, x) \notin \Lacc$ I wrote ``$\Longrightarrow M(x)$ rejects $\Longrightarrow M_2(\varepsilon)$ accepts.''
+Not being in $\Lacc$ only means that $M(x)$ does \emph{not accept}: it may reject, or it may loop.
+I handled only the first possibility, so the case where $M(x)$ loops is not covered at all, and this is exactly the case that makes $\Lacc$ undecidable.
+The posted solution writes ``rejects/loops'' at this step, and I lost the points for the $\Longleftarrow$ direction.
+Two smaller problems: in the first chain I claimed ``$\forall x \neq \varepsilon$, $M_1(x) \neq M_2(x)$'' without saying why, and I reused the letter $x$ there for the input of $M_1, M_2$ although $x$ is already the input of $M$.
+
+\textbf{How to fix it.}
+First state the facts that hold in every case: $M_1$ rejects every input, and for every $w \neq \varepsilon$, $M_2(w)$ accepts without running $M$, so $M_1(w) \neq M_2(w)$ for all $w \neq \varepsilon$.
+Hence $(\inner{M_1}, \inner{M_2}) \in L_{\varepsilon\text{-AGREE}}$ if and only if $M_2(\varepsilon)$ rejects, the same as $M_1(\varepsilon)$.
+Then split the second direction into two cases.
+If $M(x)$ rejects, $M_2(\varepsilon)$ accepts.
+If $M(x)$ loops, $M_2(\varepsilon)$ never finishes simulating $M(x)$, so it loops.
+In both cases $M_2(\varepsilon)$ does not reject, so $M_1(\varepsilon) \neq M_2(\varepsilon)$, the pair is not in $L_{\varepsilon\text{-AGREE}}$, $D$ rejects, and $M_{AG}$ rejects.
+With this change the chain for $(\inner{M}, x) \notin \Lacc$ starts with ``$M(x)$ rejects or loops $\Longrightarrow M_2(\varepsilon)$ accepts or loops,'' and the rest is unchanged.
 
 \qpage{Q2.1 Defining languages (a)}
 
